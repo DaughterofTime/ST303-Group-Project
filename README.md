@@ -1,11 +1,11 @@
 # ST303-Group-Project
 
 ## Miscellaneous
-**Group Allocation** \\
-Q1, Q2: Lisa, Chelsea \\
+**Group Allocation** \
+Q1, Q2: Lisa, Chelsea \
 Q3, Q4: Melo, Krystal, Jenny
 
-**Next meeting** \\
+**Next meeting** \
 13:00 Sunday 30 March
 
 ## Google doc link
