@@ -29,9 +29,14 @@ n <- 10^6
 
 #### Transformation 1
 ```{r}
-U <- runif(10^6)
+u <- runif(10^6)
+W <- u^grid_t*1/(cos(asin(u)))+(cos(asin(u)))^(grid_t-1)
+EstIntegral<-mean(W)
 
+print(EstIntegral)
 
+exact_values_C
+EstIntegral
 ```
 
 #### Transformation 2
