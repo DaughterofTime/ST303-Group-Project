@@ -12,7 +12,7 @@ knitr::opts_chunk$set(echo = TRUE)
 ## a)
 ### The true values
 ```{r}
-grid_t <- seq(0.1, 100, 0.1)
+grid_t <- 1:100
 
 exact_formula_C <- function(t){
   (sqrt(pi) * gamma((t + 1)/2))/gamma(t/2 + 1)
@@ -28,21 +28,59 @@ n <- 10^6
 ```
 
 #### Transformation 1
+##### Investigate the performance of integral for a fixed value of t
 ```{r}
-u <- runif(10^6)
-W <- u^grid_t*1/(cos(asin(u)))+(cos(asin(u)))^(grid_t-1)
-EstIntegral<-mean(W)
+t <- 1
+u <- runif(n)
+sample <- u^t*1/(cos(asin(u)))+(cos(asin(u)))^(t-1)
+  
+EstIntegral <- mean(sample)
+  
+Diff <- exact_formula_C(t) - EstIntegral
+Std_Error <- sd(sample)/sqrt(n)
 
-print(EstIntegral)
+rbind(EstIntegral, Diff, Std_Error)
+```
 
-exact_values_C
-EstIntegral
+
+##### Using for loop to investigate the performance of integral across different values of t:
+```{r}
+EstIntegral_1 <- numeric(length(grid_t))
+Diff_1 <- numeric(length(grid_t))
+Std_Error_1 <- numeric(length(grid_t))
+
+for (t in grid_t){
+  u <- runif(n)
+  sample <- u^t*1/(cos(asin(u)))+(cos(asin(u)))^(t-1)
+  
+  EstIntegral_1[t] <- mean(sample)
+  
+  Diff_1[t] <- exact_formula_C(t) - EstIntegral_1[t]
+  Std_Error_1[t] <- sd(sample)/sqrt(n)
+}
+
+rbind(mean_diff_1 = mean(Diff_1), mean_SE_1 = mean(Std_Error_1))
 ```
 
 #### Transformation 2
+##### Investigate the performance of integral for a fixed value of t
+```{r}
+t <- 1
+u <- runif(n)
+sample <- u^t*1/(cos(asin(u)))+(cos(asin(u)))^(t-1)
+  
+EstIntegral <- mean(sample)
+  
+Diff <- exact_formula_C(t) - EstIntegral
+Std_Error <- sd(sample)/sqrt(n)
+
+rbind(EstIntegral, Diff, Std_Error)
+```
+
+
 #### Transformation 3
 
-1b
+## b)
 ```{r}
 f <- function(x, y) {
   r <- sqrt(x^2 + y^2)
@@ -63,6 +101,7 @@ result$value
 
 ##### Alternatively, using another package:
 ```{r}
+# install.packages('pracma')
 library(pracma)
 
 f <- function(x, y) {
