@@ -1,0 +1,39 @@
+---
+title: "Q1-Q2"
+output: html_document
+date: "2025-03-26"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Question 1
+## a)
+### The true values
+```{r}
+grid_t <- seq(0.1, 100, 0.1)
+
+exact_formula_C <- function(t){
+  (sqrt(pi) * gamma((t + 1)/2))/gamma(t/2 + 1)
+}
+
+exact_values_C <- exact_formula_C(grid_t)
+plot(grid_t, exact_values_C, type = 'l')
+```
+
+### Monte Carlo Methods
+```{r}
+n <- 10^6
+```
+
+#### Transformation 1
+```{r}
+U <- runif(10^6)
+
+
+```
+
+#### Transformation 2
+#### Transformation 3
+
