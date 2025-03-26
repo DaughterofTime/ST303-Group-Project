@@ -37,3 +37,21 @@ U <- runif(10^6)
 #### Transformation 2
 #### Transformation 3
 
+1b
+```{r}
+f <- function(x, y) {
+  r <- sqrt(x^2 + y^2)
+  ifelse(r == 0, 1, sin(r) / r)  # Handle the removable singularity at (0,0)
+}
+
+result <- integrate(function(y) {
+  sapply(y, function(yi) {
+    integrate(function(x) f(x, yi), -1, 1)$value
+  })
+}, -1, 1)
+
+# Print the result
+result$value
+
+
+```
