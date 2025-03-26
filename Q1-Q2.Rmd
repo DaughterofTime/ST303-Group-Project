@@ -60,3 +60,16 @@ result$value
 
 
 ```
+
+##### Alternatively, using another package:
+```{r}
+library(pracma)
+
+f <- function(x, y) {
+  r <- sqrt(x^2 + y^2)
+  ifelse(r == 0, 1, sin(r) / r) 
+}
+
+dblquad(f, -1, 1, -1, 1)
+```
+
