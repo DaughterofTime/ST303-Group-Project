@@ -129,8 +129,8 @@ for (t in grid_t){
 rbind(mean_diff_3 = mean(Diff_3), mean_SE_3 = mean(Std_Error_3))
 ```
 
-
 ## b)
+### Calculate the true value of the double integral
 ```{r}
 f <- function(x, y) {
   r <- sqrt(x^2 + y^2)
@@ -144,12 +144,10 @@ result <- integrate(function(y) {
 }, -1, 1)
 
 # Print the result
-result$value
-
-
+true_integral <- result$value
 ```
 
-##### Alternatively, using another package:
+#### Alternatively, using another package:
 ```{r}
 # install.packages('pracma')
 library(pracma)
@@ -160,5 +158,19 @@ f <- function(x, y) {
 }
 
 dblquad(f, -1, 1, -1, 1)
+```
+
+### Pure Monte Carlo Methods
+```{r}
+n <- 10^5
+x <- runif(n)
+y <- runif(n)
+sample <- 4 * sin(sqrt(x^2 + y^2))/sqrt(x^2 + y^2)
+
+EstIntegral <- mean(sample)
+Diff <- true_integral - EstIntegral
+Std_Error <- sd(sample)/sqrt(n)
+
+rbind(EstIntegral, Diff, Std_Error)
 ```
 
