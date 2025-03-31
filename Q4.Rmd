@@ -1,0 +1,218 @@
+---
+title: "ST303 Q4"
+author: "Litong Hou"
+date: "2025-03-31"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+#Q4#
+#(a)
+# First, we create a function that models one game#
+# We build a deck with numbers 1-8 (with four numbers repeated)
+# Randomly deals 4 cards to each player
+# Determines the winner based on who has the lowest sum
+
+# Simulating a card game
+sim_game <- function() {
+  # Make a deck with 12 cards (8 cards with number 1-8 + 4 cards with numbers repeated
+  nums <- 1:8
+  # Using sample() function
+  repeat_nums <- sample(nums, size=4, replace = FALSE)
+  my_deck <- c(nums, repeat_nums)
+  
+  # Draw cards without replacement using sample() 
+  cards_drawn <- sample(my_deck, size=8, replace = FALSE)
+  
+  # Split cards between players
+  player1_cards <- cards_drawn[1:4]
+  player2_cards <- cards_drawn[5:8]
+  # cards_drawn already contains 8 randomly selected cards
+  # This make sure cards_drawn[1:4] and cards_drawn[5:8] are random 
+  # Find totals
+  p1_total <- sum(player1_cards)
+  p2_total <- sum(player2_cards)
+  
+  # Figure out who wins and calculate payoff
+  # Using the sign function 
+  result <- sign(p2_total - p1_total)
+  
+  if (result > 0) {  # Player 1 wins
+    pay <- min(player1_cards)
+    return(c(pay, -pay))
+  } else if (result < 0) {  # Player 2 wins
+    pay <- min(player2_cards)
+    return(c(-pay, pay))
+  } else {  # Nobody wins 
+    return(c(0, 0))
+  }
+}
+
+#Then, We run this simulation 100,000 times
+#recording the results each time
+
+# Main simulation - running it many times
+# Using large number 
+set.seed(42)  # Different seed 
+sims <- 100000
+all_results <- matrix(0, nrow = sims, ncol = 2)
+
+# Run the simulation lots of times
+for (i in 1:sims) {
+  all_results[i,] <- sim_game()
+}
+
+# Find unique outcomes
+p1_outcomes <- sort(unique(all_results[,1]))
+p2_outcomes <- sort(unique(all_results[,2]))
+
+# Count frequencies for each outcome
+p1_freqs <- numeric(length(p1_outcomes))
+p2_freqs <- numeric(length(p2_outcomes))
+
+for (i in 1:length(p1_outcomes)) {
+  p1_freqs[i] <- sum(all_results[,1] == p1_outcomes[i]) / sims
+}
+names(p1_freqs) <- p1_outcomes
+
+for (i in 1:length(p2_outcomes)) {
+  p2_freqs[i] <- sum(all_results[,2] == p2_outcomes[i]) / sims
+}
+names(p2_freqs) <- p2_outcomes
+
+#Finally, we analyze these results 
+#Find the probability distribution and expected values for each player's winnings or losses.
+
+# Calculate expected values
+avg_p1 <- mean(all_results[,1])
+avg_p2 <- mean(all_results[,2])
+
+# Find standard error 
+std_err_p1 <- sd(all_results[,1]) / sqrt(sims)
+std_err_p2 <- sd(all_results[,2]) / sqrt(sims)
+
+# Make a histogram 
+par(mfrow = c(2, 1), mar = c(4, 4, 2, 1))
+hist(all_results[,1], breaks = p1_outcomes, prob = TRUE, 
+     main = "Player 1 Payoffs", xlab = "Amount")
+hist(all_results[,2], breaks = p2_outcomes, prob = TRUE, 
+     main = "Player 2 Payoffs", xlab = "Amount")
+
+# Print the results
+cat("Distribution for Player 1:\n")
+for (i in 1:length(p1_outcomes)) {
+  cat(p1_outcomes[i], ": ", round(p1_freqs[i], 4), "\n")
+}
+
+cat("\nDistribution for Player 2:\n")
+for (i in 1:length(p2_outcomes)) {
+  cat(p2_outcomes[i], ": ", round(p2_freqs[i], 4), "\n")
+}
+
+cat("\nPlayer 1 expected value:", round(avg_p1, 4), "±", round(std_err_p1, 4), "\n")
+cat("Player 2 expected value:", round(avg_p2, 4), "±", round(std_err_p2, 4), "\n")
+
+#Conclusion:
+#The payoff distributions for both players are mirror images of each other.
+#The most common outcomes are -1, 0, 1, and 2, with less frequent outcomes at -3, -2, 3, and 4.
+#The expected values (Player 1: -0.0077 ± 0.0049, Player 2: 0.0077 ± 0.0049) are essentially zero.
+#The game appears to be fair, with neither player having a significant advantage.
+#Ties (payoff of 0) occur frequently, as shown by the peak at 0 in both histograms.
+
+# Part (b) 
+#We create a new function similar to the (a)
+sim_game_modified <- function(chosen) {
+  # Make deck as before
+  nums <- 1:8
+  repeat_nums <- sample(nums, size=4, replace = FALSE)
+  my_deck <- c(nums, repeat_nums)
+  
+  #But now Player 1 always gets their chosen card plus 3 random cards
+  #Player 2 gets 4 random cards
+  #First, Make sure that chosen card is in deck
+  if (chosen %in% my_deck) {
+    # Take out the first instance of chosen card
+    idx <- which(my_deck == chosen)[1]
+    my_deck <- my_deck[-idx]
+  } else {
+    # Try again if card not in deck
+    return(sim_game_modified(chosen))
+  }
+  
+  # Draw remaining cards
+  cards_drawn <- sample(my_deck, size=7, replace = FALSE)
+  
+  # Assign cards to players
+  player1_cards <- c(chosen, cards_drawn[1:3])
+  player2_cards <- cards_drawn[4:7]
+  
+  # Calculate totals and winner
+  p1_total <- sum(player1_cards)
+  p2_total <- sum(player2_cards)
+  
+  if (p1_total < p2_total) {
+    pay <- min(player1_cards)
+    return(c(pay, -pay))
+  } else if (p2_total < p1_total) {
+    pay <- min(player2_cards)
+    return(c(-pay, pay))
+  } else {
+    return(c(0, 0))
+  }
+}
+
+#We test each possible card choice (1 through 8) by running 50,000 simulations for each. 
+# Test each card choice
+set.seed(42)
+sims <- 50000
+card_choices <- 1:8
+choice_results <- matrix(0, nrow = length(card_choices), ncol = 4)
+colnames(choice_results) <- c("Exp Value", "Win %", "Loss %", "Tie %")
+
+for (i in 1:length(card_choices)) {
+  card <- card_choices[i]
+  test_results <- matrix(0, nrow = sims, ncol = 2)
+  
+  for (j in 1:sims) {
+    test_results[j,] <- sim_game_modified(card)
+  }
+  
+  # For each card choice, we calculate the expected value and win probability. 
+  # Find stats for this card choice
+  card_exp <- mean(test_results[,1])
+  win_pct <- mean(test_results[,1] > 0)
+  loss_pct <- mean(test_results[,1] < 0)
+  tie_pct <- mean(test_results[,1] == 0)
+  
+  choice_results[i,] <- c(card_exp, win_pct, loss_pct, tie_pct)
+}
+
+# Print results for each card
+cat("\nAnalysis for each card choice:\n\n")
+for (i in 1:length(card_choices)) {
+  cat("Card", card_choices[i], "results:\n")
+  cat("  Expected value: ", round(choice_results[i,1], 4), "\n")
+  cat("  Win percent: ", round(100*choice_results[i,2], 1), "%\n")
+  cat("  Loss percent: ", round(100*choice_results[i,3], 1), "%\n")
+  cat("  Tie percent: ", round(100*choice_results[i,4], 1), "%\n\n")
+}
+
+# Find best choice
+best <- which.max(choice_results[,1])
+best_card <- card_choices[best]
+
+cat("Best choice for Player 1: Card", best_card, "\n")
+cat("This gives expected value of", round(choice_results[best,1], 4), "per game\n")
+cat("The fair game had expected value around 0, so this is definitely better\n")
+
+#Conclusion
+#Player A should choose card 2
+#It gives the highest expected value of 0.518 per game
+#While choosing card 1 offers the highest win probability (70.9%), it only yields an expected value of 0.294. 
+#Card 2 provides a better balance of win probability (63.4%) and higher payoff when winning
+#As card values increase, both expected values and win probabilities decrease steadily. 
+#Player A now has a significant advantage 
+```
+
+
