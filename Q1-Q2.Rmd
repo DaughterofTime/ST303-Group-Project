@@ -174,3 +174,93 @@ Std_Error <- sd(sample)/sqrt(n)
 rbind(EstIntegral, Diff, Std_Error)
 ```
 
+# Question 2
+## a)
+### Generate various values of m, nu, lambda and alpha
+```{r}
+# m <- c(2, 10)
+# nu <- c(-1, 1)
+# lambda <- c(-1, 1)
+# alpha <- c(1, 10)
+# 
+# groups <- expand.grid(m, nu, lambda, alpha)
+# 
+# # convert rows to list of vectors
+# group_list <- split(as.matrix(groups), 1:nrow(groups))
+# #group_list
+```
+
+
+```{r}
+m <- 2
+nu <- -1
+lambda <- -1
+alpha <- 1
+```
+
+A temporary check function:
+```{r}
+check_mean_var <- function(sample){
+  mean <- lambda - alpha*nu/(2*(m - 1))
+  var <- alpha^2/(2*m - 3) * (1 + nu^2/(4*(m - 1)^2))
+  cat(mean, var)
+}
+```
+
+
+With transformation
+$$
+u = tan^{-1}(\frac{x - \lambda}{\alpha}), u \in [-\frac{\pi}{2}, \frac{\pi}{2}]
+$$
+We get
+$$
+f(u) \propto (cos(u))^{2m}e^{-\nu u}
+$$
+
+
+
+
+#### Envelop function 1 (uniform distribution)
+$$
+g(y) = \frac{1}{\pi}, Y \sim Unif[-\frac{\pi}{2}, \frac{\pi}{2}]
+$$
+
+```{r}
+# Generate Y
+n <- 10^5
+Y <- runif(n) * pi - pi/2
+```
+
+```{r}
+c_over_K_1 <- pi * (cos(atan(-nu/(2*m))))^{2*m} * exp(-nu*atan(-nu/(2*m)))
+c_over_K_1
+```
+
+```{r}
+U <- runif(n)
+
+temp <- atan(-nu/(2*m))
+
+sample_envelope_1 <- Y[U < 
+                      ((cos(Y))^{2 * m} * exp(-nu * Y))/(cos(temp)^{2*m} * exp(-nu * temp))]
+
+plot(density(sample_envelope_1), type = 'l')
+```
+
+
+```{r}
+X_envelop_1 <- tan(sample_envelop_1) * alpha + lambda
+print(c(mean(X_envelop_1), var(X_envelop_1)))
+check_mean_var(X_envelop_1)
+```
+```{r}
+# emperical rate of acceptance
+length(sample_envelop_1)/n
+```
+
+#### Envelope function 2 (cosine squared)
+```{r}
+
+```
+
+
