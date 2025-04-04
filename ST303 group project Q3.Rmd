@@ -33,5 +33,9 @@ plot(t, Rt1, "l", col = "yellow", ylim = c(ymin, ymax))
 lines(t, Rt2, "l", col="red")
 lines(t, Rt3, "l", col="blue")
 lines(t, Rt4, "l", col="green")
+legend("topleft",
+       legend = c(expression(delta *' = 1'), expression(delta *' = 2'), expression(delta *' = 3'), expression(delta *' = 4')),
+       col = c("yellow", "red", "blue", "green"),
+       lty = 1)  
 ```
 
