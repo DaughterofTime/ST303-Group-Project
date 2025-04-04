@@ -1,0 +1,37 @@
+---
+title: "ST303 group project"
+output: html_document
+date: "2025-04-04"
+---
+
+## Question 3
+
+### (a)
+```{r}
+set.seed(1)
+T = 10
+N = 1000
+dt = T/N
+Rt_sim <- function(delta, N, dt){
+  Y <- numeric(N+1)
+  Y[1] <- 1
+  for (i in 1:N){
+    dW <- sqrt(dt)*rnorm(1)
+    Y[i+1] <- max(Y[i] + delta*dt+ 2*sqrt(Y[i])*dW, 0)
+  } 
+  return(sqrt(Y))
+}
+t <- seq(0, T, by = dt)
+delta <- c(1,2,3,4)
+Rt1 <- Rt_sim(delta[1], N=1000, dt=10/1000)
+Rt2 <- Rt_sim(delta[2], N=1000, dt=10/1000)
+Rt3 <- Rt_sim(delta[3], N=1000, dt=10/1000)
+Rt4 <- Rt_sim(delta[4], N=1000, dt=10/1000)
+ymin <- min(c(Rt1, Rt2, Rt3, Rt4))
+ymax <- max(c(Rt1, Rt2, Rt3, Rt4))
+plot(t, Rt1, "l", col = "yellow", ylim = c(ymin, ymax))
+lines(t, Rt2, "l", col="red")
+lines(t, Rt3, "l", col="blue")
+lines(t, Rt4, "l", col="green")
+```
+
