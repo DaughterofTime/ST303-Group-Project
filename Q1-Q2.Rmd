@@ -79,21 +79,21 @@ rbind(EstIntegral, Diff, Std_Error)
 
 ##### Using for loop to investigate the performance of integral across different values of t:
 ```{r}
-EstIntegral_2 <- numeric(length(grid_t))
-Diff_2 <- numeric(length(grid_t))
-Std_Error_2 <- numeric(length(grid_t))
+EstIntegral_4 <- numeric(length(grid_t))
+Diff_4 <- numeric(length(grid_t))
+Std_Error_4 <- numeric(length(grid_t))
 
 for (t in grid_t){
   u <- runif(n)
   sample <- (sin(acos(u)))^{t-1} + u^t*(sin(acos(u)))^{-1}
   
-  EstIntegral_2[t] <- mean(sample)
+  EstIntegral_4[t] <- mean(sample)
   
-  Diff_2[t] <- exact_formula_C(t) - EstIntegral_2[t]
-  Std_Error_2[t] <- sd(sample)/sqrt(n)
+  Diff_4[t] <- exact_formula_C(t) - EstIntegral_4[t]
+  Std_Error_4[t] <- sd(sample)/sqrt(n)
 }
 
-rbind(mean_diff_2 = mean(Diff_2), mean_SE_2 = mean(Std_Error_2))
+rbind(mean_diff_4 = mean(Diff_4), mean_SE_4 = mean(Std_Error_4))
 ```
 
 #### Transformation 3
@@ -112,21 +112,21 @@ rbind(EstIntegral, Diff, Std_Error)
 ```
 ##### Using for loop to investigate the performance of integral across different values of t:
 ```{r}
-EstIntegral_3 <- numeric(length(grid_t))
-Diff_3 <- numeric(length(grid_t))
-Std_Error_3 <- numeric(length(grid_t))
+EstIntegral_4 <- numeric(length(grid_t))
+Diff_4 <- numeric(length(grid_t))
+Std_Error_4 <- numeric(length(grid_t))
 
 for (t in grid_t){
   u <- runif(n)
   sample <- ((sin(pi/2*u))^t + (cos(pi/2*u))^t) * pi/2
   
-  EstIntegral_3[t] <- mean(sample)
+  EstIntegral_4[t] <- mean(sample)
   
-  Diff_3[t] <- exact_formula_C(t) - EstIntegral_3[t]
-  Std_Error_3[t] <- sd(sample)/sqrt(n)
+  Diff_4[t] <- exact_formula_C(t) - EstIntegral_4[t]
+  Std_Error_4[t] <- sd(sample)/sqrt(n)
 }
 
-rbind(mean_diff_3 = mean(Diff_3), mean_SE_3 = mean(Std_Error_3))
+rbind(mean_diff_4 = mean(Diff_4), mean_SE_4 = mean(Std_Error_4))
 ```
 
 ## b)
@@ -257,7 +257,7 @@ check_mean_var(X_envelope_1)
 ```
 ```{r}
 # empirical rate of acceptance
-length(sample_envelop_1)/n
+length(sample_envelope_1)/n
 ```
 
 #### Envelope function 2 (cosine squared)
@@ -288,18 +288,66 @@ Y <- -0.5*log(U*(exp(-pi/2 * nu) - exp(pi/2 * nu)) + exp(pi/2 * nu))
 # Generate the sample using AR
 U <- runif(n)
 
-sample_envelope_2 <- Y[U < (cos(Y))^{2*m}]
+sample_envelope_3 <- Y[U < (cos(Y))^{2*m}]
 
-plot(density(sample_envelope_2), type = 'l')
+plot(density(sample_envelope_3), type = 'l')
 ```
 
 ```{r}
 # Produce X, and check mean and variance
-X_envelope_2 <- tan(sample_envelope_2) * alpha + lambda
-print(c(mean(X_envelope_2), var(X_envelope_2)))
-check_mean_var(X_envelope_2)
+X_envelope_3 <- tan(sample_envelope_3) * alpha + lambda
+print(c(mean(X_envelope_3), var(X_envelope_3)))
+check_mean_var(X_envelope_3)
 ```
 
-#### Envelope function 2 (cosine squared)
+```{r}
+# empirical rate of acceptance
+length(sample_envelope_3)/n
+```
+
+
+#### Envelope function 4 (cosine)
+$$
+g(y) = \frac{1}{2}cos(y)
+$$
+
+To generate Y, use inverse transform algorithm:
+$$
+F^{-1}(U) = sin^{-1}(2U - 1)
+$$
+
+```{r}
+# Generate Y
+n <- 10^5
+U <- runif(n)
+
+Y <- asin(2*U-1)
+```
+
+```{r}
+# Generate the sample using AR
+U <- runif(n)
+
+temp <- atan(-nu/(2*m-1))
+
+sample_envelope_4 <- Y[U < (cos(Y)^{2*m-1}*exp(-nu*Y))/(cos(temp)^{2*m-1}*exp(-nu*temp))]
+
+plot(density(sample_envelope_4), type = 'l')
+```
+
+```{r}
+# Produce X, and check mean and variance
+X_envelope_4 <- tan(sample_envelope_4) * alpha + lambda
+print(c(mean(X_envelope_4), var(X_envelope_4)))
+check_mean_var(X_envelope_4)
+```
+
+```{r}
+# empirical rate of acceptance
+length(sample_envelope_4)/n
+```
+
+
+
 
 
