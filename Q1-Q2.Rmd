@@ -237,6 +237,7 @@ c_over_K_1
 ```
 
 ```{r}
+# Generate the sample using AR
 U <- runif(n)
 
 temp <- atan(-nu/(2*m))
@@ -249,12 +250,13 @@ plot(density(sample_envelope_1), type = 'l')
 
 
 ```{r}
-X_envelop_1 <- tan(sample_envelop_1) * alpha + lambda
-print(c(mean(X_envelop_1), var(X_envelop_1)))
-check_mean_var(X_envelop_1)
+# Produce X, and check mean and variance
+X_envelope_1 <- tan(sample_envelope_1) * alpha + lambda
+print(c(mean(X_envelope_1), var(X_envelope_1)))
+check_mean_var(X_envelope_1)
 ```
 ```{r}
-# emperical rate of acceptance
+# empirical rate of acceptance
 length(sample_envelop_1)/n
 ```
 
@@ -262,5 +264,42 @@ length(sample_envelop_1)/n
 ```{r}
 
 ```
+
+
+#### Envelope function 3 (exponential)
+$$
+g(y) = \frac{\nu e^{-\nu y}}{e^{\frac{\pi}{2}\nu} - e^{-\frac{\pi}{2}\nu}}
+$$
+
+To generate Y, use inverse transform algorithm:
+$$
+F^{-1}(U) = -\frac{1}{2}log[U \times (e^{\frac{-\pi}{2}\nu} - e^{\frac{\pi}{2}\nu}) + e^{\frac{\pi}{2}\nu}]
+$$
+
+```{r}
+# Generate Y
+n <- 10^5
+U <- runif(n)
+
+Y <- -0.5*log(U*(exp(-pi/2 * nu) - exp(pi/2 * nu)) + exp(pi/2 * nu))
+```
+
+```{r}
+# Generate the sample using AR
+U <- runif(n)
+
+sample_envelope_2 <- Y[U < (cos(Y))^{2*m}]
+
+plot(density(sample_envelope_2), type = 'l')
+```
+
+```{r}
+# Produce X, and check mean and variance
+X_envelope_2 <- tan(sample_envelope_2) * alpha + lambda
+print(c(mean(X_envelope_2), var(X_envelope_2)))
+check_mean_var(X_envelope_2)
+```
+
+#### Envelope function 2 (cosine squared)
 
 
