@@ -129,6 +129,23 @@ for (t in grid_t){
 rbind(mean_diff_4 = mean(Diff_4), mean_SE_4 = mean(Std_Error_4))
 ```
 
+According to the transformation methods above, transformation 3 has the smallest standard error. Thus we do the variance reduction based on transformation 3.
+#### 1.Antithetic Variate reduction
+U=1-U
+```{r}
+t<-1
+u <- runif(n)
+samplex <- ((sin(pi/2*u))^t + (cos(pi/2*u))^t) * pi/2
+sampley <- ((sin(pi/2*(1-u)))^t + (cos(pi/2*(1-u)))^t) * pi/2
+
+mu_antithetic<-mean((samplex+sampley)/2)
+Diff <- exact_formula_C(t)-mu_antithetic
+
+SE_antithetic<-sd(0.5*(samplex+sampley)/sqrt(n))
+cbind(mu_antithetic, Diff, SE_antithetic)
+```
+
+
 ## b)
 ### Calculate the true value of the double integral
 ```{r}
@@ -145,6 +162,7 @@ result <- integrate(function(y) {
 
 # Print the result
 true_integral <- result$value
+true_integral
 ```
 
 #### Alternatively, using another package:
