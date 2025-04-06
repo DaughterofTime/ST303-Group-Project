@@ -178,34 +178,44 @@ rbind(EstIntegral, Diff, Std_Error)
 ## a)
 ### Generate various values of m, nu, lambda and alpha
 ```{r}
-# m <- c(2, 10)
-# nu <- c(-1, 1)
-# lambda <- c(-1, 1)
-# alpha <- c(1, 10)
-# 
-# groups <- expand.grid(m, nu, lambda, alpha)
-# 
-# # convert rows to list of vectors
-# group_list <- split(as.matrix(groups), 1:nrow(groups))
-# #group_list
+m_list <- c(2, 10)
+nu_list <- c(-1, 1)
+lambda_list <- c(-1, 1)
+alpha_list <- c(1, 10)
+
+groups <- expand.grid(m_list, nu_list, lambda_list, alpha_list)
+
+m <- groups$Var1
+nu <- groups$Var2
+lambda <- groups$Var3
+alpha <- groups$Var4
+
+# convert rows to list of vectors
+group_list <- split(as.matrix(groups), LETTERS[1:nrow(groups)])
+group_list
 ```
 
 
 ```{r}
-m <- 2
-nu <- -1
-lambda <- -1
-alpha <- 1
+# m <- 2
+# nu <- -1
+# lambda <- -1
+# alpha <- 1
 ```
+
+
 
 A temporary check function:
 ```{r}
-check_mean_var <- function(sample){
-  mean <- lambda - alpha*nu/(2*(m - 1))
-  var <- alpha^2/(2*m - 3) * (1 + nu^2/(4*(m - 1)^2))
-  cat(mean, var)
-}
+theoretical_mean <- lambda - alpha*nu/(2*(m - 1))
+theoretical_var <- alpha^2/(2*m - 3) * (1 + nu^2/(4*(m - 1)^2))
 ```
+
+
+```{r}
+Q2_summary <- data.frame(m, nu, lambda, alpha, theoretical_mean, theoretical_var)
+```
+
 
 
 ### With transformation
@@ -235,24 +245,40 @@ Y <- runif(n) * pi - pi/2
 # Generate the sample using AR
 U <- runif(n)
 
-temp <- atan(-nu/(2*m))
+sample_envelope_1 <- lapply(1:16, function(i) {
+  m <- m[i]
+  nu <- nu[i]
+  
+  temp <- atan(-nu / (2 * m))
+  accepted_Y <- Y[U < 
+    (cos(Y))^(2 * m) * exp(-nu * Y) / (cos(temp)^(2 * m) * exp(-nu * temp))]
+})
 
-sample_envelope_1 <- Y[U < 
-                      ((cos(Y))^{2 * m} * exp(-nu * Y))/(cos(temp)^{2*m} * exp(-nu * temp))]
-
-plot(density(sample_envelope_1), type = 'l')
+plot(density(sample_envelope_1[[1]]), type = 'l')
 ```
-
 
 ```{r}
 # Produce X, and check mean and variance
-X_envelope_1 <- tan(sample_envelope_1) * alpha + lambda
-print(c(mean(X_envelope_1), var(X_envelope_1)))
-check_mean_var(X_envelope_1)
+X_envelope_1 <- lapply(1:16, function(i){tan(sample_envelope_1[[i]]) * alpha[i] + lambda[i]})
+# X_envelope_1[[1]][1:10]
+# sample_envelope_1[[1]][1:10]
+
+envelop_1_empirical_mean <- unlist(lapply(1:16, function(i) mean(X_envelope_1[[i]])))
+envelop_1_empirical_var <- unlist(lapply(1:16, function(i) var(X_envelope_1[[i]])))
 ```
+
 ```{r}
 # empirical rate of acceptance
-length(sample_envelope_1)/n
+envelope_1_empirical_acceptance <- unlist(lapply(1:16, function(i) length(sample_envelope_1[[i]])/10^5))
+```
+
+```{r}
+# add the results to the summary
+library(tidyverse)
+Q2_summary <- Q2_summary %>% 
+  mutate(envelop_1_empirical_mean, envelop_1_empirical_var, envelope_1_empirical_acceptance)
+
+Q2_summary
 ```
 
 #### Envelope function 2 (exponential)
