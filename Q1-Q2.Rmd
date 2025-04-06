@@ -1,0 +1,399 @@
+---
+title: "Q1-Q2"
+output: html_document
+date: "2025-03-26"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Question 1
+## a)
+### The true values
+```{r}
+grid_t <- 1:100
+
+exact_formula_C <- function(t){
+  (sqrt(pi) * gamma((t + 1)/2))/gamma(t/2 + 1)
+}
+
+exact_values_C <- exact_formula_C(grid_t)
+plot(grid_t, exact_values_C, type = 'l')
+```
+
+### Monte Carlo Methods
+```{r}
+n <- 10^6
+```
+
+#### Transformation 1
+##### Investigate the performance of integral for a fixed value of t
+```{r}
+t <- 1
+u <- runif(n)
+sample <- u^t*1/(cos(asin(u)))+(cos(asin(u)))^(t-1)
+  
+EstIntegral <- mean(sample)
+  
+Diff <- exact_formula_C(t) - EstIntegral
+Std_Error <- sd(sample)/sqrt(n)
+
+rbind(EstIntegral, Diff, Std_Error)
+```
+
+
+##### Using for loop to investigate the performance of integral across different values of t:
+```{r}
+EstIntegral_1 <- numeric(length(grid_t))
+Diff_1 <- numeric(length(grid_t))
+Std_Error_1 <- numeric(length(grid_t))
+
+for (t in grid_t){
+  u <- runif(n)
+  sample <- u^t*1/(cos(asin(u)))+(cos(asin(u)))^(t-1)
+  
+  EstIntegral_1[t] <- mean(sample)
+  
+  Diff_1[t] <- exact_formula_C(t) - EstIntegral_1[t]
+  Std_Error_1[t] <- sd(sample)/sqrt(n)
+}
+
+rbind(mean_diff_1 = mean(Diff_1), mean_SE_1 = mean(Std_Error_1))
+```
+
+#### Transformation 2
+##### Investigate the performance of integral for a fixed value of t
+```{r}
+t <- 1
+u <- runif(n)
+sample <- (sin(acos(u)))^{t-1} + u^t*(sin(acos(u)))^{-1}
+  
+EstIntegral <- mean(sample)
+  
+Diff <- exact_formula_C(t) - EstIntegral
+Std_Error <- sd(sample)/sqrt(n)
+
+rbind(EstIntegral, Diff, Std_Error)
+```
+
+##### Using for loop to investigate the performance of integral across different values of t:
+```{r}
+EstIntegral_4 <- numeric(length(grid_t))
+Diff_4 <- numeric(length(grid_t))
+Std_Error_4 <- numeric(length(grid_t))
+
+for (t in grid_t){
+  u <- runif(n)
+  sample <- (sin(acos(u)))^{t-1} + u^t*(sin(acos(u)))^{-1}
+  
+  EstIntegral_4[t] <- mean(sample)
+  
+  Diff_4[t] <- exact_formula_C(t) - EstIntegral_4[t]
+  Std_Error_4[t] <- sd(sample)/sqrt(n)
+}
+
+rbind(mean_diff_4 = mean(Diff_4), mean_SE_4 = mean(Std_Error_4))
+```
+
+#### Transformation 3
+##### Investigate the performance of integral for a fixed value of t
+```{r}
+t <- 1
+u <- runif(n)
+sample <- ((sin(pi/2*u))^t + (cos(pi/2*u))^t) * pi/2
+  
+EstIntegral <- mean(sample)
+  
+Diff <- exact_formula_C(t) - EstIntegral
+Std_Error <- sd(sample)/sqrt(n)
+
+rbind(EstIntegral, Diff, Std_Error)
+```
+##### Using for loop to investigate the performance of integral across different values of t:
+```{r}
+EstIntegral_4 <- numeric(length(grid_t))
+Diff_4 <- numeric(length(grid_t))
+Std_Error_4 <- numeric(length(grid_t))
+
+for (t in grid_t){
+  u <- runif(n)
+  sample <- ((sin(pi/2*u))^t + (cos(pi/2*u))^t) * pi/2
+  
+  EstIntegral_4[t] <- mean(sample)
+  
+  Diff_4[t] <- exact_formula_C(t) - EstIntegral_4[t]
+  Std_Error_4[t] <- sd(sample)/sqrt(n)
+}
+
+rbind(mean_diff_4 = mean(Diff_4), mean_SE_4 = mean(Std_Error_4))
+```
+
+## b)
+### Calculate the true value of the double integral
+```{r}
+f <- function(x, y) {
+  r <- sqrt(x^2 + y^2)
+  ifelse(r == 0, 1, sin(r) / r)  # Handle the removable singularity at (0,0)
+}
+
+result <- integrate(function(y) {
+  sapply(y, function(yi) {
+    integrate(function(x) f(x, yi), -1, 1)$value
+  })
+}, -1, 1)
+
+# Print the result
+true_integral <- result$value
+```
+
+#### Alternatively, using another package:
+```{r}
+# install.packages('pracma')
+library(pracma)
+
+f <- function(x, y) {
+  r <- sqrt(x^2 + y^2)
+  ifelse(r == 0, 1, sin(r) / r) 
+}
+
+dblquad(f, -1, 1, -1, 1)
+```
+
+### Pure Monte Carlo Methods
+```{r}
+n <- 10^5
+x <- runif(n)
+y <- runif(n)
+sample <- 4 * sin(sqrt(x^2 + y^2))/sqrt(x^2 + y^2)
+
+EstIntegral <- mean(sample)
+Diff <- true_integral - EstIntegral
+Std_Error <- sd(sample)/sqrt(n)
+
+rbind(EstIntegral, Diff, Std_Error)
+```
+
+# Question 2
+## a)
+### Generate various values of m, nu, lambda and alpha
+```{r}
+# m <- c(2, 10)
+# nu <- c(-1, 1)
+# lambda <- c(-1, 1)
+# alpha <- c(1, 10)
+# 
+# groups <- expand.grid(m, nu, lambda, alpha)
+# 
+# # convert rows to list of vectors
+# group_list <- split(as.matrix(groups), 1:nrow(groups))
+# #group_list
+```
+
+
+```{r}
+m <- 2
+nu <- -1
+lambda <- -1
+alpha <- 1
+```
+
+A temporary check function:
+```{r}
+check_mean_var <- function(sample){
+  mean <- lambda - alpha*nu/(2*(m - 1))
+  var <- alpha^2/(2*m - 3) * (1 + nu^2/(4*(m - 1)^2))
+  cat(mean, var)
+}
+```
+
+
+### With transformation
+$$
+u = tan^{-1}(\frac{x - \lambda}{\alpha}), u \in [-\frac{\pi}{2}, \frac{\pi}{2}]
+$$
+We get
+$$
+f(u) \propto (cos(u))^{2m}e^{-\nu u}
+$$
+
+
+
+
+#### Envelope function 1 (uniform distribution)
+$$
+g(y) = \frac{1}{\pi}, Y \sim Unif[-\frac{\pi}{2}, \frac{\pi}{2}]
+$$
+
+```{r}
+# Generate Y
+n <- 10^5
+Y <- runif(n) * pi - pi/2
+```
+
+```{r}
+# Generate the sample using AR
+U <- runif(n)
+
+temp <- atan(-nu/(2*m))
+
+sample_envelope_1 <- Y[U < 
+                      ((cos(Y))^{2 * m} * exp(-nu * Y))/(cos(temp)^{2*m} * exp(-nu * temp))]
+
+plot(density(sample_envelope_1), type = 'l')
+```
+
+
+```{r}
+# Produce X, and check mean and variance
+X_envelope_1 <- tan(sample_envelope_1) * alpha + lambda
+print(c(mean(X_envelope_1), var(X_envelope_1)))
+check_mean_var(X_envelope_1)
+```
+```{r}
+# empirical rate of acceptance
+length(sample_envelope_1)/n
+```
+
+#### Envelope function 2 (exponential)
+$$
+g(y) = \frac{\nu e^{-\nu y}}{e^{\frac{\pi}{2}\nu} - e^{-\frac{\pi}{2}\nu}}
+$$
+
+To generate Y, use inverse transform algorithm:
+$$
+F^{-1}(U) = -\frac{1}{2}log[U \times (e^{\frac{-\pi}{2}\nu} - e^{\frac{\pi}{2}\nu}) + e^{\frac{\pi}{2}\nu}]
+$$
+
+```{r}
+# Generate Y
+n <- 10^5
+U <- runif(n)
+
+Y <- -0.5*log(U*(exp(-pi/2 * nu) - exp(pi/2 * nu)) + exp(pi/2 * nu))
+```
+
+```{r}
+# Generate the sample using AR
+U <- runif(n)
+
+sample_envelope_2 <- Y[U < (cos(Y))^{2*m}]
+
+plot(density(sample_envelope_2), type = 'l')
+```
+
+```{r}
+# Produce X, and check mean and variance
+X_envelope_2 <- tan(sample_envelope_2) * alpha + lambda
+print(c(mean(X_envelope_2), var(X_envelope_2)))
+check_mean_var(X_envelope_2)
+```
+
+```{r}
+# empirical rate of acceptance
+length(sample_envelope_2)/n
+```
+
+
+#### Envelope function 3 (cosine)
+$$
+g(y) = \frac{1}{2}cos(y)
+$$
+
+To generate Y, use inverse transform algorithm:
+$$
+F^{-1}(U) = sin^{-1}(2U - 1)
+$$
+
+```{r}
+# Generate Y
+n <- 10^5
+U <- runif(n)
+
+Y <- asin(2*U-1)
+```
+
+```{r}
+# Generate the sample using AR
+U <- runif(n)
+
+temp <- atan(-nu/(2*m-1))
+
+sample_envelope_3 <- Y[U < (cos(Y)^{2*m-1}*exp(-nu*Y))/(cos(temp)^{2*m-1}*exp(-nu*temp))]
+
+plot(density(sample_envelope_3), type = 'l')
+```
+
+```{r}
+# Produce X, and check mean and variance
+X_envelope_3 <- tan(sample_envelope_3) * alpha + lambda
+print(c(mean(X_envelope_3), var(X_envelope_3)))
+check_mean_var(X_envelope_3)
+```
+
+```{r}
+# empirical rate of acceptance
+length(sample_envelope_3)/n
+```
+
+### Without transformation
+#### Envelope function 4 (cauchy)
+
+```{r}
+# Generate Y
+n <- 10^5
+Y <- alpha * tan(pi*runif(n) - pi/2) + lambda
+```
+
+```{r}
+# Generate the sample using AR
+U <- runif(n)
+
+temp_1 <- (Y - lambda)/alpha
+temp_2 <- nu/(2*(1 - m))
+
+sample_envelope_4 <- Y[U < ((1 + temp_1^2)^{-m} * exp(-nu * atan(temp_1)))/((1 + temp_2^2)^{1-m} * exp(-nu*atan(temp_2)))]
+
+plot(density(sample_envelope_4), type = 'l')
+```
+
+```{r}
+# Produce X, and check mean and variance
+X_envelope_4 <- sample_envelope_4
+print(c(mean(X_envelope_4), var(X_envelope_4)))
+check_mean_var(X_envelope_4)
+```
+
+```{r}
+# empirical rate of acceptance
+length(sample_envelope_4)/n
+```
+
+#### Envelope function 5 (t)
+```{r}
+# Generate Y
+n <- 10^5
+k <- 2*m - 1
+
+Y_prime <- rt(n, df = k)
+Y <- Y_prime * alpha/sqrt(k) + lambda
+```
+
+```{r}
+# Generate the sample using AR
+U <- runif(n)
+
+sample_envelope_5 <- Y[U < exp(-nu*atan((Y - lambda)/alpha) - nu*pi/2)]
+
+plot(density(sample_envelope_5), type = 'l')
+```
+
+```{r}
+# empirical rate of acceptance
+length(sample_envelope_5)/n
+```
+
+```{r}
+print(c(mean(sample_envelope_5), var(sample_envelope_5)))
+check_mean_var(sample_envelope_5)
+```
