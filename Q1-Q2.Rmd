@@ -133,7 +133,7 @@ According to the transformation methods above, transformation 3 has the smallest
 #### 1.Antithetic Variate reduction
 U=1-U
 ```{r}
-t<-1
+t <- 1
 u <- runif(n)
 samplex <- ((sin(pi/2*u))^t + (cos(pi/2*u))^t) * pi/2
 sampley <- ((sin(pi/2*(1-u)))^t + (cos(pi/2*(1-u)))^t) * pi/2
@@ -257,6 +257,7 @@ Y <- runif(n) * pi - pi/2
 
 ```{r}
 # Generate the sample using AR
+ptm <- proc.time()
 U <- runif(n)
 
 sample_envelope_1 <- lapply(1:length(nu), function(i) {
@@ -267,6 +268,7 @@ sample_envelope_1 <- lapply(1:length(nu), function(i) {
   accepted_Y <- Y[U < 
     (cos(Y))^(2 * m) * exp(-nu * Y) / (cos(temp)^(2 * m) * exp(-nu * temp))]
 })
+sim_envelope_1 <- (proc.time()- ptm)[3]
 
 plot(density(sample_envelope_1[[1]]), type = 'l')
 ```
@@ -365,6 +367,7 @@ Y <- asin(2*U-1)
 
 ```{r}
 # Generate the sample using AR
+ptm <- proc.time()
 U <- runif(n)
 
 temp <- atan(-nu/(2*m-1))
@@ -376,6 +379,7 @@ sample_envelope_3 <- lapply(1:length(nu), function(i){
   
   Y[U < (cos(Y)^{2*m-1}*exp(-nu*Y))/(cos(temp)^{2*m-1}*exp(-nu*temp))]
 })
+sim_envelope_3 <- (proc.time()- ptm)[3]
 
 plot(density(sample_envelope_3[[1]]), type = 'l')
 ```
@@ -410,6 +414,7 @@ Y <- lapply(1:length(nu), function(i) alpha[i] * tan(pi*runif(n) - pi/2) + lambd
 
 ```{r}
 # Generate the sample using AR
+ptm <- proc.time()
 U <- runif(n)
 
 temp_1 <- lapply(1:length(nu), function(i) (Y[[i]] - lambda[i])/alpha[i])
@@ -424,8 +429,8 @@ sample_envelope_4 <- lapply(1:length(nu), function(i){
   
   Y[U < ((1 + temp_1^2)^{-m} * exp(-nu * atan(temp_1)))/((1 + temp_2^2)^{1-m} * exp(-nu*atan(temp_2)))]
 })
+sim_envelope_4 <- (proc.time()- ptm)[3]
 
-summary(sample_envelope_4)
 
 plot(density(sample_envelope_4[[1]]), type = 'l')
 ```
@@ -465,6 +470,7 @@ Y <- lapply(1:length(nu), function(i){
 
 ```{r}
 # Generate the sample using AR
+ptm <- proc.time()
 U <- runif(n)
 
 sample_envelope_5 <- lapply(1:length(nu), function(i){
@@ -475,6 +481,7 @@ sample_envelope_5 <- lapply(1:length(nu), function(i){
   
   Y[U < exp(-nu*atan((Y - lambda)/alpha) - abs(nu)*pi/2)]
 })
+sim_envelope_5 <- (proc.time()- ptm)[3]
 
 plot(density(sample_envelope_5[[1]]), type = 'l')
 ```
@@ -502,7 +509,7 @@ Q2_summary <- Q2_summary %>%
 
 ### Export summary_Q2
 ```{r}
-write.csv(Q2_summary, 'Q2_summary_2_param.csv', row.names = F)
+write.csv(Q2_summary, 'Q2_summary_10_param.csv', row.names = F)
 ```
 
 
