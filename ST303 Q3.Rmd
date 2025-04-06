@@ -132,9 +132,65 @@ cat("Extra cost of Bermuda over European =", diff_price, "\n")
 
 ```
 
+###（d)
+```{r}
+# Bermuda option with optimal exercise
+bermuda_payoffs <- numeric(M)
+for (m in 1:M) {
+  payoffs <- tk_payoff[,m]
+  
+  # At maturity, optimal decision is to exercise if in-the-money
+  continuation_values <- numeric(10)
+  continuation_values[10] <- payoffs[10]
+  
+  for (t in 9:1) {
+    # Estimate continuation value at time t
+    in_money_paths <- payoffs[t] > 0
+    if (sum(in_money_paths) > 0) {
+      # For paths that are in-the-money at time t, compare immediate exercise vs. continuation
+      immediate_exercise <- payoffs[t]
+      # Simple estimate of continuation value: average of future payoffs
+      future_payoff <- continuation_values[t+1]
+      continuation_values[t] <- max(immediate_exercise, future_payoff)
+    } else {
+      continuation_values[t] <- continuation_values[t+1]
+    }
+  }
+  
+  # Record the payoff from optimal exercise policy
+  bermuda_payoffs[m] <- continuation_values[1]
+}
 
+bermuda_price <- mean(bermuda_payoffs)
+bermuda_price
+```
 
+```{r}
+#European option payoff: just (R_{10} - K)+ at final time t=10 for each path
+# Because your Rt_matrix is (N+1) rows from t=0..10, 
+# So, we use the final row is Rt_matrix[nrow(Rt_matrix), ]:
+tk_payoff_10 <- tk_payoff[10,]
+mean(tk_payoff_10)
+```
 
+```{r}
+#
+#Bermuda price:
+cat("Bermuda call price =", bermuda_price, "\n")
+
+#European price:
+european_price <- mean(tk_payoff_10)
+cat("European call price =", european_price, "\n")
+
+#Difference（How much more expensive Bermuda Price than an European price)
+premium <- bermuda_price - european_price
+cat("Extra cost of Bermuda over European =", premium, "\n")
+```
+
+### (e)
+```{r}
+
+```
 
 
 
