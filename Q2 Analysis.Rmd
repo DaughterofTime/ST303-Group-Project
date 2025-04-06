@@ -11,7 +11,7 @@ knitr::opts_chunk$set(echo = TRUE)
 ### Upload data
 ```{r}
 library(tidyverse)
-Q2_summary <- read.csv('Q2_summary_2_param.csv')
+Q2_summary <- read.csv('Q2_summary_10_param.csv')
 
 Q2_summary
 colnames(Q2_summary)
@@ -66,11 +66,25 @@ Q2_summary_acceptance <- Q2_summary %>% select(
 Q2_summary_acceptance
 ```
 
+### Export the analysis
 ```{r}
-# Export the analysis
-write.csv(Q2_summary_mean, 'Q2_summary_mean_2_param.csv')
-write.csv(Q2_summary_var, 'Q2_summary_var_2_param.csv')
-write.csv(Q2_summary_acceptance, 'Q2_summary_acceptance_2_param.csv')
+# write.csv(Q2_summary_mean, 'Q2_summary_mean_10_param.csv')
+# write.csv(Q2_summary_var, 'Q2_summary_var_10_param.csv')
+# write.csv(Q2_summary_acceptance, 'Q2_summary_acceptance_10_param.csv')
 ```
 
+### Further analysis on acceptance rate
+```{r}
+library(ggplot2)
+library(tidyr)
+
+# Convert wide dataframe to long format
+df_long <- pivot_longer(Q2_summary_acceptance[, 5:ncol(Q2_summary_acceptance)], cols = everything(), names_to = "Envelope", values_to = "Acceptance")
+
+# Plot
+ggplot(df_long, aes(x = Envelope, y = Acceptance, fill = Envelope)) +
+  geom_boxplot() +
+  theme_minimal() + 
+  theme(legend.position = "none")
+```
 
