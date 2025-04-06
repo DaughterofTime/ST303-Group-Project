@@ -548,5 +548,9 @@ Q2_summary <- Q2_summary %>%
 write.csv(Q2_summary, 'Q2_summary_10_param.csv', row.names = F)
 ```
 
+### Check the time consumed
+```{r}
+rbind(sim_envelope_1, sim_envelope_3, sim_envelope_4, sim_envelope_5)
+```
 
 
