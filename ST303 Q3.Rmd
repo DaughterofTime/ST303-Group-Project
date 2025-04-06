@@ -38,6 +38,7 @@ legend("topleft",
        col = c("yellow", "red", "blue", "green"),
        lty = 1)  
 ```
+
 ### (b)
 ```{r}
 set.seed(1)
@@ -53,7 +54,7 @@ matplot(t, Rt_matrix, type = "l", lty = 1, col = rainbow(M),
         main = "Sample Paths of Bessel Process (δ = 1)",
         xlab = "Time t", ylab = expression(R[t]))
 
-max_Rt <- apply(Rt_matrix, 2, max) # calculate maximum for each column of Rt matrix
+max_Rt <- apply(Rt_matrix, 2, max) # calculate maximum for each column of Rt_matrix
 
 hist(max_Rt, breaks = 20, prob = T, 
      main = expression("Histogram of Max " * R[t] * " over [0,10] (δ = 1)"), 
@@ -63,4 +64,45 @@ mean(max_Rt)
 legend("topright",
        legend = "mean = 3.812538")
 ```
+
+### (c)
+```{r}
+set.seed(1)
+
+delta = 1.2
+K = 2
+T = 10
+M <- 100  # Number of sample paths
+t <- seq(0, T, by = dt)
+
+Rt_matrix <- sapply(1:M, function(m) Rt_sim(delta, N, dt)) # row: dt, col: mth path of Rt
+
+matplot(t, Rt_matrix, type = "l", lty = 1, col = rainbow(M),
+        main = "Sample Paths of Bessel Process (δ = 1.2)",
+        xlab = "Time t", ylab = expression(R[t]))
+
+
+
+
+tk_index <- (1:10)/(10/1000) +1
+Rtk <- Rt_matrix[tk_index, ]  # rows: t_k, cols: paths
+
+tk_payoff <- pmax(Rtk - K, 0)  # (Rt - K)+
+
+exercise_time <- apply(tk_payoff, 2, function(payoffs) {
+  idx <- which(payoffs > 0)[1]  # first positive payoff
+  if (is.na(idx)) return(NA)   # never exercised
+  return(idx)  # tk index (1 to 10)
+})
+
+# Convert index to actual time τ
+tau <- ifelse(is.na(exercise_time), NA, exercise_time)  # τ in 1:10
+```
+
+
+
+
+
+
+
 
