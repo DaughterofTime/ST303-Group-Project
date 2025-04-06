@@ -97,6 +97,9 @@ exercise_time <- apply(tk_payoff, 2, function(payoffs) {
 
 # Convert index to actual time τ
 tau <- ifelse(is.na(exercise_time), NA, exercise_time)  # τ in 1:10
+
+hist(tau, prob = T, breaks = 20)
+lines(density(tau[!is.na(tau)]))
 ```
 
 
