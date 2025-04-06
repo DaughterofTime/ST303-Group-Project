@@ -131,6 +131,7 @@ for (m in 1:M) {
 }
 
 bermuda_price <- mean(bermuda_payoffs)
+bermuda_price
 ```
 
 ```{r}
@@ -138,10 +139,22 @@ bermuda_price <- mean(bermuda_payoffs)
 # Because your Rt_matrix is (N+1) rows from t=0..10, 
 # So, we use the final row is Rt_matrix[nrow(Rt_matrix), ]:
 tk_payoff_10 <- tk_payoff[10,]
-tk_payoff_10 <- tk_payoff_10[!tk_payoff_10 %in% c(0)]
 mean(tk_payoff_10)
 ```
 
+```{r}
+#
+#Bermuda price (already computed)
+cat("Bermuda call price =", bermuda_price, "\n")
+
+#European price:
+european_price <- mean(tk_payoff_10)
+cat("European call price =", european_price, "\n")
+
+#Difference（How much more expensive Bermuda Price than an European price)
+premium <- bermuda_price - european_price
+cat("Extra cost of Bermuda over European =", premium, "\n")
+```
 
 
 
