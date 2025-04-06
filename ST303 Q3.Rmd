@@ -42,7 +42,6 @@ legend("topleft",
 ### (b)
 ```{r}
 set.seed(1)
-par(mfrow = c(2,2))
 
 M <- 100  # Number of sample paths
 t <- seq(0, T, by = dt)
@@ -102,7 +101,46 @@ hist(tau, prob = T, breaks = 20)
 lines(density(tau[!is.na(tau)]))
 ```
 
+###（d)
+```{r}
+# Bermuda option with optimal exercise
+bermuda_payoffs <- numeric(M)
+for (m in 1:M) {
+  payoffs <- tk_payoff[,m]
+  
+  # At maturity, optimal decision is to exercise if in-the-money
+  continuation_values <- numeric(10)
+  continuation_values[10] <- payoffs[10]
+  
+  for (t in 9:1) {
+    # Estimate continuation value at time t
+    in_money_paths <- payoffs[t] > 0
+    if (sum(in_money_paths) > 0) {
+      # For paths that are in-the-money at time t, compare immediate exercise vs. continuation
+      immediate_exercise <- payoffs[t]
+      # Simple estimate of continuation value: average of future payoffs
+      future_payoff <- continuation_values[t+1]
+      continuation_values[t] <- max(immediate_exercise, future_payoff)
+    } else {
+      continuation_values[t] <- continuation_values[t+1]
+    }
+  }
+  
+  # Record the payoff from optimal exercise policy
+  bermuda_payoffs[m] <- continuation_values[1]
+}
 
+bermuda_price <- mean(bermuda_payoffs)
+```
+
+```{r}
+#European option payoff: just (R_{10} - K)+ at final time t=10 for each path
+# Because your Rt_matrix is (N+1) rows from t=0..10, 
+# So, we use the final row is Rt_matrix[nrow(Rt_matrix), ]:
+tk_payoff_10 <- tk_payoff[10,]
+tk_payoff_10 <- tk_payoff_10[!tk_payoff_10 %in% c(0)]
+mean(tk_payoff_10)
+```
 
 
 
