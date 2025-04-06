@@ -141,7 +141,7 @@ sampley <- ((sin(pi/2*(1-u)))^t + (cos(pi/2*(1-u)))^t) * pi/2
 mu_antithetic<-mean((samplex+sampley)/2)
 Diff <- exact_formula_C(t)-mu_antithetic
 
-SE_antithetic<-sd(0.5*(samplex+sampley)/sqrt(n))
+SE_antithetic<-sd(0.5*(samplex+sampley))/sqrt(2*n)
 cbind(mu_antithetic, Diff, SE_antithetic)
 ```
 
