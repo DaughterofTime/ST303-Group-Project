@@ -208,7 +208,7 @@ check_mean_var <- function(sample){
 ```
 
 
-With transformation
+### With transformation
 $$
 u = tan^{-1}(\frac{x - \lambda}{\alpha}), u \in [-\frac{\pi}{2}, \frac{\pi}{2}]
 $$
@@ -220,7 +220,7 @@ $$
 
 
 
-#### Envelop function 1 (uniform distribution)
+#### Envelope function 1 (uniform distribution)
 $$
 g(y) = \frac{1}{\pi}, Y \sim Unif[-\frac{\pi}{2}, \frac{\pi}{2}]
 $$
@@ -229,11 +229,6 @@ $$
 # Generate Y
 n <- 10^5
 Y <- runif(n) * pi - pi/2
-```
-
-```{r}
-c_over_K_1 <- pi * (cos(atan(-nu/(2*m))))^{2*m} * exp(-nu*atan(-nu/(2*m)))
-c_over_K_1
 ```
 
 ```{r}
@@ -260,13 +255,7 @@ check_mean_var(X_envelope_1)
 length(sample_envelope_1)/n
 ```
 
-#### Envelope function 2 (cosine squared)
-```{r}
-
-```
-
-
-#### Envelope function 3 (exponential)
+#### Envelope function 2 (exponential)
 $$
 g(y) = \frac{\nu e^{-\nu y}}{e^{\frac{\pi}{2}\nu} - e^{-\frac{\pi}{2}\nu}}
 $$
@@ -288,25 +277,25 @@ Y <- -0.5*log(U*(exp(-pi/2 * nu) - exp(pi/2 * nu)) + exp(pi/2 * nu))
 # Generate the sample using AR
 U <- runif(n)
 
-sample_envelope_3 <- Y[U < (cos(Y))^{2*m}]
+sample_envelope_2 <- Y[U < (cos(Y))^{2*m}]
 
-plot(density(sample_envelope_3), type = 'l')
+plot(density(sample_envelope_2), type = 'l')
 ```
 
 ```{r}
 # Produce X, and check mean and variance
-X_envelope_3 <- tan(sample_envelope_3) * alpha + lambda
-print(c(mean(X_envelope_3), var(X_envelope_3)))
-check_mean_var(X_envelope_3)
+X_envelope_2 <- tan(sample_envelope_2) * alpha + lambda
+print(c(mean(X_envelope_2), var(X_envelope_2)))
+check_mean_var(X_envelope_2)
 ```
 
 ```{r}
 # empirical rate of acceptance
-length(sample_envelope_3)/n
+length(sample_envelope_2)/n
 ```
 
 
-#### Envelope function 4 (cosine)
+#### Envelope function 3 (cosine)
 $$
 g(y) = \frac{1}{2}cos(y)
 $$
@@ -330,14 +319,47 @@ U <- runif(n)
 
 temp <- atan(-nu/(2*m-1))
 
-sample_envelope_4 <- Y[U < (cos(Y)^{2*m-1}*exp(-nu*Y))/(cos(temp)^{2*m-1}*exp(-nu*temp))]
+sample_envelope_3 <- Y[U < (cos(Y)^{2*m-1}*exp(-nu*Y))/(cos(temp)^{2*m-1}*exp(-nu*temp))]
+
+plot(density(sample_envelope_3), type = 'l')
+```
+
+```{r}
+# Produce X, and check mean and variance
+X_envelope_3 <- tan(sample_envelope_3) * alpha + lambda
+print(c(mean(X_envelope_3), var(X_envelope_3)))
+check_mean_var(X_envelope_3)
+```
+
+```{r}
+# empirical rate of acceptance
+length(sample_envelope_3)/n
+```
+
+### Without transformation
+#### Envelope function 4 (cauchy)
+
+```{r}
+# Generate Y
+n <- 10^5
+Y <- alpha * tan(pi*runif(n) - pi/2) + lambda
+```
+
+```{r}
+# Generate the sample using AR
+U <- runif(n)
+
+temp_1 <- (Y - lambda)/alpha
+temp_2 <- nu/(2*(1 - m))
+
+sample_envelope_4 <- Y[U < ((1 + temp_1^2)^{-m} * exp(-nu * atan(temp_1)))/((1 + temp_2^2)^{1-m} * exp(-nu*atan(temp_2)))]
 
 plot(density(sample_envelope_4), type = 'l')
 ```
 
 ```{r}
 # Produce X, and check mean and variance
-X_envelope_4 <- tan(sample_envelope_4) * alpha + lambda
+X_envelope_4 <- sample_envelope_4
 print(c(mean(X_envelope_4), var(X_envelope_4)))
 check_mean_var(X_envelope_4)
 ```
@@ -347,7 +369,31 @@ check_mean_var(X_envelope_4)
 length(sample_envelope_4)/n
 ```
 
+#### Envelope function 5 (t)
+```{r}
+# Generate Y
+n <- 10^5
+k <- 2*m - 1
 
+Y_prime <- rt(n, df = k)
+Y <- Y_prime * alpha/sqrt(k) + lambda
+```
 
+```{r}
+# Generate the sample using AR
+U <- runif(n)
 
+sample_envelope_5 <- Y[U < exp(-nu*atan((Y - lambda)/alpha) - nu*pi/2)]
 
+plot(density(sample_envelope_5), type = 'l')
+```
+
+```{r}
+# empirical rate of acceptance
+length(sample_envelope_5)/n
+```
+
+```{r}
+print(c(mean(sample_envelope_5), var(sample_envelope_5)))
+check_mean_var(sample_envelope_5)
+```
