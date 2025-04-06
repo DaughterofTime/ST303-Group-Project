@@ -1,0 +1,16 @@
+---
+title: "Q2 Analaysis"
+output: html_document
+date: "2025-04-06"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+### Upload data
+```{r}
+library(readxl)
+Q2_summary <- read_excel('Q2_summary_2_param')
+```
+
