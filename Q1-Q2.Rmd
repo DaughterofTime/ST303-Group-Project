@@ -296,28 +296,38 @@ $$
 n <- 10^5
 U <- runif(n)
 
-Y <- -0.5*log(U*(exp(-pi/2 * nu) - exp(pi/2 * nu)) + exp(pi/2 * nu))
+Y <- lapply(1:16, function(i){-0.5*log(U*(exp(-pi/2 * nu[i]) - exp(pi/2 * nu[i])) + exp(pi/2 * nu[i]))})
 ```
 
 ```{r}
 # Generate the sample using AR
 U <- runif(n)
 
-sample_envelope_2 <- Y[U < (cos(Y))^{2*m}]
+sample_envelope_2 <- lapply(1:16, function(i){
+  Y[[i]][U < (cos(Y[[i]]))^{2*m[i]}]
+})
 
-plot(density(sample_envelope_2), type = 'l')
+plot(density(sample_envelope_2[[1]]), type = 'l')
 ```
 
 ```{r}
 # Produce X, and check mean and variance
-X_envelope_2 <- tan(sample_envelope_2) * alpha + lambda
-print(c(mean(X_envelope_2), var(X_envelope_2)))
-check_mean_var(X_envelope_2)
+X_envelope_2 <- lapply(1:16, function(i) tan(sample_envelope_2[[i]]) * alpha[i] + lambda[i])
+
+envelop_2_empirical_mean <- unlist(lapply(1:16, function(i) mean(X_envelope_2[[i]])))
+envelop_2_empirical_var <- unlist(lapply(1:16, function(i) var(X_envelope_2[[i]])))
 ```
 
 ```{r}
 # empirical rate of acceptance
-length(sample_envelope_2)/n
+envelope_2_empirical_acceptance <- unlist(lapply(1:16, function(i) length(sample_envelope_2[[i]])/10^5))
+```
+```{r}
+# update Q2_summary
+Q2_summary <- Q2_summary %>% 
+  mutate(envelop_2_empirical_mean, envelop_2_empirical_var, envelope_2_empirical_acceptance)
+
+Q2_summary
 ```
 
 
@@ -345,81 +355,141 @@ U <- runif(n)
 
 temp <- atan(-nu/(2*m-1))
 
-sample_envelope_3 <- Y[U < (cos(Y)^{2*m-1}*exp(-nu*Y))/(cos(temp)^{2*m-1}*exp(-nu*temp))]
+sample_envelope_3 <- lapply(1:16, function(i){
+  temp <- temp[i]
+  m <- m[i]
+  nu <- nu[i]
+  
+  Y[U < (cos(Y)^{2*m-1}*exp(-nu*Y))/(cos(temp)^{2*m-1}*exp(-nu*temp))]
+})
 
-plot(density(sample_envelope_3), type = 'l')
+plot(density(sample_envelope_3[[1]]), type = 'l')
 ```
 
 ```{r}
 # Produce X, and check mean and variance
-X_envelope_3 <- tan(sample_envelope_3) * alpha + lambda
-print(c(mean(X_envelope_3), var(X_envelope_3)))
-check_mean_var(X_envelope_3)
+X_envelope_3 <- lapply(1:16, function(i) tan(sample_envelope_3[[i]]) * alpha[i] + lambda[i])
+
+envelop_3_empirical_mean <- unlist(lapply(1:16, function(i) mean(X_envelope_3[[i]])))
+envelop_3_empirical_var <- unlist(lapply(1:16, function(i) var(X_envelope_3[[i]])))
 ```
 
 ```{r}
 # empirical rate of acceptance
-length(sample_envelope_3)/n
+envelope_3_empirical_acceptance <- unlist(lapply(1:16, function(i) length(sample_envelope_3[[i]])/10^5))
+```
+
+```{r}
+# update Q2_summary
+Q2_summary <- Q2_summary %>% 
+  mutate(envelop_3_empirical_mean, envelop_3_empirical_var, envelope_3_empirical_acceptance)
 ```
 
 ### Without transformation
-#### Envelope function 4 (cauchy)
+#### Envelope function 4 (Cauchy)
 
 ```{r}
 # Generate Y
 n <- 10^5
-Y <- alpha * tan(pi*runif(n) - pi/2) + lambda
+Y <- lapply(1:16, function(i) alpha[i] * tan(pi*runif(n) - pi/2) + lambda[i])
 ```
 
 ```{r}
 # Generate the sample using AR
 U <- runif(n)
 
-temp_1 <- (Y - lambda)/alpha
+temp_1 <- lapply(1:16, function(i) (Y[[i]] - lambda[i])/alpha[i])
 temp_2 <- nu/(2*(1 - m))
 
-sample_envelope_4 <- Y[U < ((1 + temp_1^2)^{-m} * exp(-nu * atan(temp_1)))/((1 + temp_2^2)^{1-m} * exp(-nu*atan(temp_2)))]
+sample_envelope_4 <- lapply(1:16, function(i){
+  Y <- Y[[i]]
+  temp_1 <- temp_1[[i]]
+  temp_2 <- temp_2[i]
+  nu <- nu[i]
+  m <- m[i]
+  
+  Y[U < ((1 + temp_1^2)^{-m} * exp(-nu * atan(temp_1)))/((1 + temp_2^2)^{1-m} * exp(-nu*atan(temp_2)))]
+})
 
-plot(density(sample_envelope_4), type = 'l')
+summary(sample_envelope_4)
+
+plot(density(sample_envelope_4[[1]]), type = 'l')
 ```
 
 ```{r}
 # Produce X, and check mean and variance
 X_envelope_4 <- sample_envelope_4
-print(c(mean(X_envelope_4), var(X_envelope_4)))
-check_mean_var(X_envelope_4)
+
+envelop_4_empirical_mean <- unlist(lapply(1:16, function(i) mean(X_envelope_4[[i]])))
+envelop_4_empirical_var <- unlist(lapply(1:16, function(i) var(X_envelope_4[[i]])))
 ```
 
 ```{r}
 # empirical rate of acceptance
-length(sample_envelope_4)/n
+envelope_4_empirical_acceptance <- unlist(lapply(1:16, function(i) length(sample_envelope_4[[i]])/10^5))
 ```
 
-#### Envelope function 5 (t)
+```{r}
+# update summary_Q2
+Q2_summary <- Q2_summary %>% 
+  mutate(envelop_4_empirical_mean, envelop_4_empirical_var, envelope_4_empirical_acceptance)
+
+colnames(Q2_summary)
+```
+
+
+#### Envelope function 5 (t distribution)
 ```{r}
 # Generate Y
 n <- 10^5
 k <- 2*m - 1
 
-Y_prime <- rt(n, df = k)
-Y <- Y_prime * alpha/sqrt(k) + lambda
+Y <- lapply(1:16, function(i){
+  rt(n, df = k[i]) * alpha[i]/sqrt(k[i]) + lambda[i]
+})
 ```
 
 ```{r}
 # Generate the sample using AR
 U <- runif(n)
 
-sample_envelope_5 <- Y[U < exp(-nu*atan((Y - lambda)/alpha) - nu*pi/2)]
+sample_envelope_5 <- lapply(1:16, function(i){
+  Y <- Y[[i]]
+  nu <- nu[i]
+  lambda <- lambda[i]
+  alpha <- alpha[i]
+  
+  Y[U < exp(-nu*atan((Y - lambda)/alpha) - nu*pi/2)]
+})
 
-plot(density(sample_envelope_5), type = 'l')
+plot(density(sample_envelope_5[[1]]), type = 'l')
 ```
+
+```{r}
+# Check mean and variance
+X_envelope_5 <- sample_envelope_5
+
+envelop_5_empirical_mean <- unlist(lapply(1:16, function(i) mean(X_envelope_5[[i]])))
+envelop_5_empirical_var <- unlist(lapply(1:16, function(i) var(X_envelope_5[[i]])))
+```
+
 
 ```{r}
 # empirical rate of acceptance
-length(sample_envelope_5)/n
+envelope_5_empirical_acceptance <- unlist(lapply(1:16, function(i) length(sample_envelope_5[[i]])/10^5))
 ```
 
 ```{r}
-print(c(mean(sample_envelope_5), var(sample_envelope_5)))
-check_mean_var(sample_envelope_5)
+# update summary_Q2
+Q2_summary <- Q2_summary %>% 
+  mutate(envelop_5_empirical_mean, envelop_5_empirical_var, envelope_5_empirical_acceptance)
 ```
+
+
+### Export summary_Q2
+```{r}
+write.csv(Q2_summary, 'Q2_summary.csv', row.names = F)
+```
+
+
+
