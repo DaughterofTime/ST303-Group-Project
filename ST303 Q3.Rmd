@@ -144,7 +144,7 @@ mean(tk_payoff_10)
 
 ```{r}
 #
-#Bermuda price (already computed)
+#Bermuda price:
 cat("Bermuda call price =", bermuda_price, "\n")
 
 #European price:
@@ -156,6 +156,10 @@ premium <- bermuda_price - european_price
 cat("Extra cost of Bermuda over European =", premium, "\n")
 ```
 
+### (e)
+```{r}
+
+```
 
 
 
