@@ -8,6 +8,11 @@ date: "2025-03-26"
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+```{r}
+library(tidyverse)
+library(ggplot2)
+```
+
 # Question 2
 ## a)
 ### Generate various values of m, nu, lambda and alpha
@@ -329,25 +334,43 @@ Q2_summary <- Q2_summary %>%
 #write.csv(Q2_summary, 'Q2_summary_10_param.csv', row.names = F)
 ```
 
-### Check the time consumed
-```{r}
-#rbind(sim_envelope_1, sim_envelope_3, sim_envelope_4, sim_envelope_5)
-sim_envelope_3
-```
-### Analysis on acceptance
+### Pick the best envelope function
+### Check the rate of acceptance
 ```{r}
 Q2_summary_acceptance <- Q2_summary %>%
-  select(m, nu, lambda, alpha, envelope_3 = envelope_3_empirical_acceptance) %>%
+  select(m, nu, lambda, alpha, envelope_1 = envelope_1_empirical_acceptance, envelope_3 = envelope_3_empirical_acceptance, envelope_4 = envelope_4_empirical_acceptance, envelope_5 = envelope_5_empirical_acceptance)
+
+df_long <- pivot_longer(Q2_summary_acceptance[, 5:ncol(Q2_summary_acceptance)], cols = everything(), names_to = "Envelope", values_to = "Acceptance")
+
+# Plot
+ggplot(df_long, aes(x = Envelope, y = Acceptance, fill = Envelope)) +
+  geom_boxplot() +
+  theme_minimal() + 
+  theme(legend.position = "none")
+```
+
+
+#### Check the time consumed
+```{r}
+rbind(sim_envelope_1, sim_envelope_3, sim_envelope_4, sim_envelope_5)
+#sim_envelope_3
+```
+
+Thus, pick envelope 3 as our envelope function. 
+
+### Analysis on acceptance
+```{r}
+Q2_summary_acceptance_3 <- Q2_summary_acceptance %>%
+  select(m, nu, lambda, alpha, envelope_3) %>%
   arrange(desc(envelope_3))
 
-length(unique(Q2_summary_acceptance$envelope_3))
-Q2_summary_acceptance
+Q2_summary_acceptance_3
 ```
 
 It is clear that the rate of acceptance is not affected by either $\lambda$ or $\alpha$. Thus, check the relationship between rate of acceptance and $m$, $\nu$:
 
 ```{r}
-Q2_summary_acceptance_temp <- Q2_summary_acceptance %>% 
+Q2_summary_acceptance_temp <- Q2_summary_acceptance_3 %>% 
   group_by(envelope_3) %>%
   summarize(m = unique(m), nu = unique(nu)) %>%
   arrange(desc(envelope_3))
@@ -444,7 +467,6 @@ matrix <- matrix(numeric(length = length(nu)*length(quantile_percents)), nrow = 
 
 for (i in 1:length(nu)){
   matrix[i,] <- quantile(X_envelope_3[[i]], prob = quantile_percents)
-  print(i)
 }
 ```
 
@@ -473,7 +495,7 @@ Q2_summary_empirical_quantiles
 ### Redefine the parameters
 ```{r}
 # Set m to be a large value. Also set arbitrary parameters sigma and lambda.
-m <- 10000
+m <- 100
 sigma <- 2
 lambda <- 1
 
