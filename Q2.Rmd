@@ -367,7 +367,7 @@ ggplot(Q2_summary_acceptance_temp, aes(x = nu, y = envelope_3, col = factor(m)))
          theme_minimal()
 ```
 
-Hence, the acceptance rate is highest when $m$ is small, AND $\nu$ is close to zero.
+Hence, the acceptance rate is highest when $m$ is small, **AND** $\nu$ is close to zero.
 
 ## b)
 ### Analysis on mean
@@ -470,7 +470,59 @@ Q2_summary_empirical_quantiles
 ```
 
 ## d)
+### Redefine the parameters
 ```{r}
+# Set m to be a large value. Also set arbitrary parameters sigma and lambda.
+m <- 10000
+sigma <- 2
+lambda <- 1
 
+# Set the other parameters according to requirements
+nu <- 0
+alpha <- sigma*sqrt(2*m - 3)
+alpha
 ```
 
+### Generate sample from envelope 3 (cosine)
+```{r}
+# Generate Y
+n <- 10^5
+U <- runif(n)
+
+Y <- asin(2*U-1)
+```
+
+```{r}
+# Generate the sample using AR
+U <- runif(n)
+
+temp <- atan(-nu/(2*m-1))
+
+Q2d_sample <- Y[U < (cos(Y)^{2*m-1}*exp(-nu*Y))/(cos(temp)^{2*m-1}*exp(-nu*temp))]
+```
+
+```{r}
+# Produce X, and check mean, variance, acceptance
+Q2d_X <- tan(Q2d_sample) * alpha + lambda
+
+envelop_3_empirical_mean <- mean(Q2d_X)
+envelop_3_empirical_var <- var(Q2d_X)
+envelope_3_empirical_acceptance <- length(Q2d_X)/n
+envelope_3_empirical_acceptance
+```
+
+### Use graphs to compare the sample with N(lambda, sigma)
+```{r}
+# PDF
+x <- seq(min(Q2d_X), max(Q2d_X), 0.01)
+plot(x, dnorm(x, mean = lambda, sd = sigma), type = 'l', main = 'Compare the PDF of the generated X and N(lambda, sigma^2)', ylab = 'density', col = 'red')
+lines(density(Q2d_X), col = 'black')
+legend('topright', legend = c('generated X', 'N(lambda, sigma^2)'), col = c('black', 'red'), lty = 1)
+```
+
+```{r}
+# Q-Q plot
+qqplot(rnorm(length(Q2d_X), mean = lambda, sd = sigma), Q2d_X, main = 'Q-Q plot of the generated X vs N(lambda, sigma^2)')
+abline(a = 0, b = 1, col = 'red', lwd = 2)
+legend('bottomright', legend = '45 degree reference line', col = 'red', lty = 1, lwd = 2)
+```
