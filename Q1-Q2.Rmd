@@ -543,14 +543,55 @@ Q2_summary <- Q2_summary %>%
 ```
 
 
+
 ### Export summary_Q2
 ```{r}
-write.csv(Q2_summary, 'Q2_summary_10_param.csv', row.names = F)
+#write.csv(Q2_summary, 'Q2_summary_10_param.csv', row.names = F)
 ```
 
 ### Check the time consumed
 ```{r}
-rbind(sim_envelope_1, sim_envelope_3, sim_envelope_4, sim_envelope_5)
+#rbind(sim_envelope_1, sim_envelope_3, sim_envelope_4, sim_envelope_5)
+sim_envelope_3
+```
+### Analysis on acceptance
+```{r}
+Q2_summary_acceptance <- Q2_summary %>%
+  select(m, nu, lambda, alpha, envelope_3 = envelope_3_empirical_acceptance) %>%
+  arrange(desc(envelope_3))
+
+length(unique(Q2_summary_acceptance$envelope_3))
+Q2_summary_acceptance
+```
+
+It is clear that the rate of acceptance is not affected by either $\lambda$ or $\alpha$. Thus, check the relationship between rate of acceptance and $m$, $\nu$:
+
+```{r}
+Q2_summary_acceptance_temp <- Q2_summary_acceptance %>% 
+  group_by(envelope_3) %>%
+  summarize(m = unique(m), nu = unique(nu)) %>%
+  arrange(desc(envelope_3))
+
+Q2_summary_acceptance_temp
+```
+
+```{r}
+# Try ggplot2
+library(ggplot2)
+ggplot(Q2_summary_acceptance_temp, aes(x = m, y = envelope_3, col = factor(nu))) + 
+         geom_point(alpha = 0.5, size = 5) + 
+         theme_minimal()
+
+ggplot(Q2_summary_acceptance_temp, aes(x = nu, y = envelope_3, col = factor(m))) + 
+         geom_point(alpha = 0.5, size = 5) + 
+         theme_minimal()
+```
+
+## b)
+### Analysis on mean
+```{r}
+Q2_summary_empirical_mean <- Q2_summary %>%
+  select()
 ```
 
 
