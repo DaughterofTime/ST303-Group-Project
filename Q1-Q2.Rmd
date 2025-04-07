@@ -587,11 +587,75 @@ ggplot(Q2_summary_acceptance_temp, aes(x = nu, y = envelope_3, col = factor(m)))
          theme_minimal()
 ```
 
+Hence, the acceptance rate is highest when $m$ is small, AND $\nu$ is close to zero.
+
 ## b)
 ### Analysis on mean
 ```{r}
 Q2_summary_empirical_mean <- Q2_summary %>%
-  select()
+  mutate(diff = envelop_3_empirical_mean - theoretical_mean) %>%
+  select(m, nu, lambda, alpha, diff) %>%
+  arrange(diff)
+
+Q2_summary_empirical_mean
+mean(Q2_summary_empirical_mean$diff) # the mean difference is very small
 ```
 
+It is obvious that $\lambda$ has no effect on the deviation from theoretical mean. Use plots to investigate the effects of other parameters:
+```{r}
+Q2_summary_empirical_mean_temp <- Q2_summary_empirical_mean %>% 
+  group_by(diff) %>%
+  summarize(m = unique(m), nu = unique(nu), alpha = unique(alpha)) %>%
+  arrange(diff)
+```
+
+```{r}
+# Plots
+ggplot(Q2_summary_empirical_mean_temp, aes(m, diff, col = factor(nu))) + geom_point() + theme_minimal()
+ggplot(Q2_summary_empirical_mean_temp, aes(nu, diff, col = factor(m))) + geom_point() + theme_minimal()
+ggplot(Q2_summary_empirical_mean_temp, aes(alpha, diff, col = factor(nu))) + geom_point() + theme_minimal()
+```
+
+Hence, the difference to the theoretical mean is the smallest when \\
+- $\m$ is large; \\
+- $\nu$ is close to zero; \\
+- $\alpha$ is small.\\
+
+### Analysis on variance
+```{r}
+Q2_summary_empirical_var <- Q2_summary %>%
+  mutate(diff = envelop_3_empirical_var - theoretical_var) %>%
+  select(m, nu, lambda, alpha, diff) %>%
+  arrange(diff)
+
+Q2_summary_empirical_var
+mean(Q2_summary_empirical_var$diff) # the difference to theoretical variance is large
+sum(Q2_summary_empirical_var$diff >=0) # there is no empirical variance that is higher than the theoretical variance.
+```
+
+It is obvious that $\lambda$ has no effect on the deviation from theoretical variance. Use plots to investigate the effects of other parameters:
+```{r}
+Q2_summary_empirical_var_temp <- Q2_summary_empirical_var %>% 
+  group_by(diff) %>%
+  summarize(m = unique(m), nu = unique(nu), alpha = unique(alpha)) %>%
+  arrange(diff)
+```
+
+```{r}
+# Plots
+ggplot(Q2_summary_empirical_var_temp, aes(m, diff, col = factor(nu))) + geom_point() + theme_minimal()
+ggplot(Q2_summary_empirical_var_temp, aes(nu, diff, col = factor(m))) + geom_point() + theme_minimal()
+ggplot(Q2_summary_empirical_var_temp, aes(alpha, diff, col = factor(nu))) + geom_point() + theme_minimal()
+```
+
+Hence, the difference to the theoretical variance is the smallest when \\
+- $\m$ is large; \\
+- $\nu$ is close to zero; \\
+- $\alpha$ is small.\\
+Is this a good thing or not?
+
+## c)
+```{r}
+
+```
 
