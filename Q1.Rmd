@@ -24,6 +24,7 @@ plot(grid_t, exact_values_C, type = 'l')
 
 ### Monte Carlo Methods
 ```{r}
+set.seed(1)
 n <- 10^6
 ```
 
@@ -136,15 +137,17 @@ The antithetic variate reduction is not applicable since the function is not mon
 #### 1.Control variates method
 ```{r}
 t <- 1
-u <- runif(n)
-samplex <- ((sin(pi/2*u))^t + (cos(pi/2*u))^t) * pi/2
-sampley <- ((sin(pi/2*(1-u)))^t + (cos(pi/2*(1-u)))^t) * pi/2
+u <- runif(n,0,1)
 
-mu_antithetic<-mean((samplex+sampley)/2)
-Diff <- exact_formula_C(t)-mu_antithetic
+X <- ((sin(pi/2*u))^t + (cos(pi/2*u))^t) * pi/2
+Y <- pi^3/48*t-pi^3/16*t*u^2
 
-SE_antithetic<-sd(0.5*(samplex+sampley))/sqrt(2*n)
-cbind(mu_antithetic, Diff, SE_antithetic)
+c <- -cov(X,Y)/var(Y)
+X_cv <- X+c*Y
+mean_cv <- mean(X_cv)
+SE_cv <- sd(X_cv)/sqrt(n)
+
+cbind(mean_cv,SE_cv)
 ```
 
 ##### Using for loop to investigate the performance of integral across different values of t:
@@ -155,16 +158,16 @@ Std_Error_4 <- numeric(length(grid_t))
 
 for (t in grid_t){
   u <- runif(n)
-  samplex <- ((sin(pi/2*u))^t + (cos(pi/2*u))^t) * pi/2
-  sampley <- ((sin(pi/2*(1-u)))^t + (cos(pi/2*(1-u)))^t) * pi/2
-  
-  mu_antithetic[t] <- mean((samplex+sampley)/2)
-  
-  Diff_4[t] <- exact_formula_C(t) - mu_antithetic[t]
-  Std_Error_4[t] <- sd(0.5*(samplex+sampley))/sqrt(2*n)
+  X <- ((sin(pi/2*u))^t + (cos(pi/2*u))^t) * pi/2
+  Y <- pi^3/48*t-pi^3/16*t*u^2
+  c <- -cov(X,Y)/var(Y)
+
+  X_cv <- X+c*Y
+  mean_cv <- mean(X_cv)
+  SE_cv <- sd(X_cv)/sqrt(n)
 }
 
-rbind(mean_diff_4 = mean(mu_antithetic), mean_SE_4 = mean(Std_Error_4))
+rbind(mean_diff_4 = mean(mean_cv), mean_SE_4 = mean(SE_cv))
 ```
 
 ## b)
@@ -214,6 +217,7 @@ rbind(EstIntegral, Diff, Std_Error)
 ```
 #### 1.Antithetic Variate reduction
 ```{r}
+set.seed(1)
 n <- 10^5
 x <- runif(n)
 y <- runif(n)
@@ -224,4 +228,18 @@ Diff <- true_integral - EstIntegral
 Std_Error <- sd((sample1+sample2)/2)/sqrt(n)
 
 rbind(EstIntegral, Diff, Std_Error)
+```
+
+#### 2.Stratified sampling
+```{r}
+n <- 10^5
+u <- runif(n)
+j <- 1:n
+sample <- 4 * sin(sqrt(((u+j-1)/n)^2 + ((u+j-1)/n)^2))/sqrt(((u+j-1)/n)^2 + ((u+j-1)/n)^2)
+
+Mu_SS <- mean(sample)
+Diff <- true_integral - Mu_SS
+SE_SS <- sd(sample)/sqrt(n)
+
+rbind(Mu_SS, Diff, SE_SS)
 ```
