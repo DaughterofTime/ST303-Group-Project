@@ -475,10 +475,7 @@ dim(matrix)
 ```{r}
 Q2_empirical_quantiles <- as.data.frame(matrix) %>% mutate(index = 1:length(nu))
 colnames(Q2_empirical_quantiles) <- c(paste(as.character(quantile_percents*100), '%', sep = ''), 'index')
-Q2_empirical_quantiles
-```
 
-```{r}
 Q2_summary_empirical_quantiles <- Q2_summary %>% 
   mutate(index = 1:length(nu)) %>%
   select(m, nu, lambda, alpha, index, theoretical_mean, theoretical_var) %>%
@@ -487,6 +484,7 @@ Q2_summary_empirical_quantiles <- Q2_summary %>%
 
 Q2_summary_empirical_quantiles
 ```
+
 
 ### CLT quantiles
 ```{r}
