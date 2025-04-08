@@ -113,7 +113,6 @@ Q2_summary
 ## c)
 ### Empirical quantiles
 ```{r}
-length(X_envelope_3)
 quantile_percents <- c(0.05, 0.1, 0.25, 0.5, 0.75, 0.9, 0.95)
 
 matrix <- matrix(numeric(length = length(nu)*length(quantile_percents)), nrow = length(nu))
@@ -121,24 +120,38 @@ matrix <- matrix(numeric(length = length(nu)*length(quantile_percents)), nrow = 
 for (i in 1:length(nu)){
   matrix[i,] <- quantile(X_envelope_3[[i]], prob = quantile_percents)
 }
-
-dim(matrix)
 ```
 
 ```{r}
 Q2_empirical_quantiles <- as.data.frame(matrix) %>% mutate(index = 1:length(nu))
-colnames(Q2_empirical_quantiles) <- c(paste(as.character(quantile_percents*100), '%', sep = ''), 'index')
+colnames(Q2_empirical_quantiles) <- c(paste(as.character(quantile_percents*100), '%_Empirical', sep = ''), 'index')
 
-Q2_summary_empirical_quantiles <- Q2_summary %>% 
+Q2_summary_quantiles <- Q2_summary %>% 
   mutate(index = 1:length(nu)) %>%
   select(m, nu, lambda, alpha, index, theoretical_mean, theoretical_var) %>%
   left_join(Q2_empirical_quantiles, by = join_by(index)) %>%
   select(-index)
-Q2_summary_empirical_quantiles
+Q2_summary_quantiles
 ```
 
 
 ### CLT quantiles
+Try to make the unrealistic assumption of 
+$$
+\frac{X - E(X)}{\sqrt{Var(X)}} \sim N(0, 1)
+$$
+
+and estimate quantiles accordingly:
+$$
+quantile = E(X) + \sqrt{Var(X)}\Phi^{-1}(p)
+$$
+
 ```{r}
+matrix <- matrix(numeric(length = length(nu)*length(quantile_percents)), nrow = length(nu))
+
+for (i in 1:length(nu)){
+  matrix[i,] <- Q2_summary$theoretical_mean[i] + sqrt(Q2_summary$theoretical_var[i]) * qnorm(quantile_percents, mean = 0, sd = 1)
+}
+
 
 ```
