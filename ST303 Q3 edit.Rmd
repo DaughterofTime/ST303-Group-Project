@@ -20,16 +20,11 @@ $$
 Consider the SDE for the squared Bessel process $Y_t = R_t^2$, by Itô's formula:
 
 $$
-dY_t = 2R_t \, dR_t + \frac{1}{2} \cdot 2 \, d[R]_t, \quad \text{where } d[R]_t = dt
-$$
-
-$$
-= 2R_t \left( \frac{\delta - 1}{2R_t} \, dt + dW_t \right) + dt
-$$
-
-$$
+dY_t = 2R_t \, dR_t + \frac{1}{2} \cdot 2 \, d[R]_t, \quad \text{where } d[R]_t = dt \\
+= 2R_t \left( \frac{\delta - 1}{2R_t} \, dt + dW_t \right) + dt \\
 = \delta \, dt + 2 \sqrt{Y_t} \, dW_t,  \quad dW_t \sim \sqrt{dt} \cdot \mathcal{N}(0, 1)
 $$
+
 
 $$
 Y_t = Y_0 + \int_0^t \delta \, ds + \int_0^t 2\sqrt{Y_s} \, dW_s, \quad Y_0 = R_0^2 = 1
@@ -38,7 +33,7 @@ $$
 Check:
 
 $$
-\mathbb{E}(Y_t) = Y_0 + \delta t, \quad \text{since } \mathbb{E} \left( \int_0^t 2\sqrt{Y_s} \, dW_s \right) = 0
+\mathbb{E}(Y_t) = Y_0 + \delta t, \quad \text{since } \mathbb{E} \left( \int_0^t 2\sqrt{Y_r} \, dW_r  | F_s\right) = 0
 $$
 
 
