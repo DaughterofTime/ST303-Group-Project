@@ -1,0 +1,147 @@
+---
+title: "Q2"
+output: html_document
+date: "2025-03-26"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(tidyverse)
+library(ggplot2)
+```
+
+# Question 2
+## a)
+### Generate various values of m, nu, lambda and alpha
+```{r}
+m_list <- seq(1.6, 10, length.out = 10)
+nu_list <- seq(-5, 5, length.out = 10)
+lambda_list <- seq(-5, 5, length.out = 10)
+alpha_list <- seq(0.1, 10, length.out = 10)
+
+groups <- expand.grid(m_list, nu_list, lambda_list, alpha_list)
+
+m <- groups$Var1
+nu <- groups$Var2
+lambda <- groups$Var3
+alpha <- groups$Var4
+```
+
+
+```{r}
+theoretical_mean <- lambda - alpha*nu/(2*(m - 1))
+theoretical_var <- alpha^2/(2*m - 3) * (1 + nu^2/(4*(m - 1)^2))
+```
+
+
+```{r}
+Q2_summary <- data.frame(m, nu, lambda, alpha, theoretical_mean, theoretical_var)
+```
+
+
+
+### With transformation
+$$
+y = tan^{-1}(\frac{x - \lambda}{\alpha}), y \in [-\frac{\pi}{2}, \frac{\pi}{2}]
+$$
+We get
+$$
+f(y) \propto (cos(y))^{2m}e^{-\nu y}
+$$
+
+
+#### Envelope function 3 (cosine)
+$$
+g(y) = \frac{1}{2}cos(y)
+$$
+
+To generate Y, use inverse transform algorithm:
+$$
+F^{-1}(U) = sin^{-1}(2U - 1)
+$$
+
+```{r}
+# Generate Y
+n <- 10^5
+U <- runif(n)
+
+Y <- asin(2*U-1)
+```
+
+```{r}
+# Generate the sample using AR
+ptm <- proc.time()
+U <- runif(n)
+
+temp <- atan(-nu/(2*m-1))
+
+sample_envelope_3 <- lapply(1:length(nu), function(i){
+  temp <- temp[i]
+  m <- m[i]
+  nu <- nu[i]
+  
+  Y[U < (cos(Y)^{2*m-1}*exp(-nu*Y))/(cos(temp)^{2*m-1}*exp(-nu*temp))]
+})
+sim_envelope_3 <- (proc.time()- ptm)[3]
+
+plot(density(sample_envelope_3[[1]]), type = 'l')
+```
+
+```{r}
+# Produce X, and check mean and variance
+X_envelope_3 <- lapply(1:length(nu), function(i) tan(sample_envelope_3[[i]]) * alpha[i] + lambda[i])
+
+envelop_3_empirical_mean <- unlist(lapply(1:length(nu), function(i) mean(X_envelope_3[[i]])))
+envelop_3_empirical_var <- unlist(lapply(1:length(nu), function(i) var(X_envelope_3[[i]])))
+```
+
+```{r}
+# empirical rate of acceptance
+envelope_3_empirical_acceptance <- unlist(lapply(1:length(nu), function(i) length(sample_envelope_3[[i]])/10^5))
+```
+
+```{r}
+# update Q2_summary
+Q2_summary <- Q2_summary %>% 
+  mutate(envelop_3_empirical_mean, envelop_3_empirical_var, envelope_3_empirical_acceptance)
+Q2_summary
+```
+
+## c)
+### Empirical quantiles
+```{r}
+length(X_envelope_3)
+quantile_percents <- c(0.05, 0.1, 0.25, 0.5, 0.75, 0.9, 0.95)
+
+matrix <- matrix(numeric(length = length(nu)*length(quantile_percents)), nrow = length(nu))
+
+for (i in 1:length(nu)){
+  matrix[i,] <- quantile(X_envelope_3[[i]], prob = quantile_percents)
+}
+
+dim(matrix)
+```
+
+```{r}
+Q2_empirical_quantiles <- as.data.frame(matrix) %>% mutate(index = 1:length(nu))
+colnames(Q2_empirical_quantiles) <- c(paste(as.character(quantile_percents*100), '%', sep = ''), 'index')
+Q2_empirical_quantiles
+```
+
+```{r}
+Q2_summary_empirical_quantiles <- Q2_summary %>% 
+  mutate(index = 1:length(nu)) %>%
+  select(m, nu, lambda, alpha, index, theoretical_mean, theoretical_var) %>%
+  left_join(Q2_empirical_quantiles, by = join_by(index)) %>%
+  select(-index)
+
+Q2_summary_empirical_quantiles
+```
+
+### CLT quantiles
+```{r}
+
+```
