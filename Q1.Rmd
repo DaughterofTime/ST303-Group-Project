@@ -24,134 +24,85 @@ plot(grid_t, exact_values_C, type = 'l')
 
 ### Monte Carlo Methods
 ```{r}
-set.seed(1)
 n <- 10^6
 ```
 
 #### Transformation 1
-##### Investigate the performance of integral for a fixed value of t
-```{r}
-t <- 1
-u <- runif(n)
-sample <- u^t*1/(cos(asin(u)))+(cos(asin(u)))^(t-1)
-  
-EstIntegral <- mean(sample)
-  
-Diff <- exact_formula_C(t) - EstIntegral
-Std_Error <- sd(sample)/sqrt(n)
-
-rbind(EstIntegral, Diff, Std_Error)
-```
-
 
 ##### Using for loop to investigate the performance of integral across different values of t:
 ```{r}
+set.seed(1)
 EstIntegral_1 <- numeric(length(grid_t))
 Diff_1 <- numeric(length(grid_t))
 Std_Error_1 <- numeric(length(grid_t))
 
 for (t in grid_t){
   u <- runif(n)
-  sample <- u^t*1/(cos(asin(u)))+(cos(asin(u)))^(t-1)
+  sample_1 <- u^t*1/(cos(asin(u)))+(cos(asin(u)))^(t-1)
   
-  EstIntegral_1[t] <- mean(sample)
+  EstIntegral_1[t] <- mean(sample_1)
   
   Diff_1[t] <- exact_formula_C(t) - EstIntegral_1[t]
-  Std_Error_1[t] <- sd(sample)/sqrt(n)
+  Std_Error_1[t] <- sd(sample_1)/sqrt(n)
 }
 
-rbind(mean_diff_1 = mean(Diff_1), mean_SE_1 = mean(Std_Error_1))
+rbind(mean_1=mean(EstIntegral_1),mean_diff_1 = mean(Diff_1), mean_SE_1 = mean(Std_Error_1))
 ```
 
 #### Transformation 2
-##### Investigate the performance of integral for a fixed value of t
-```{r}
-t <- 1
-u <- runif(n)
-sample <- (sin(acos(u)))^{t-1} + u^t*(sin(acos(u)))^{-1}
-  
-EstIntegral <- mean(sample)
-  
-Diff <- exact_formula_C(t) - EstIntegral
-Std_Error <- sd(sample)/sqrt(n)
-
-rbind(EstIntegral, Diff, Std_Error)
-```
 
 ##### Using for loop to investigate the performance of integral across different values of t:
 ```{r}
-EstIntegral_4 <- numeric(length(grid_t))
-Diff_4 <- numeric(length(grid_t))
-Std_Error_4 <- numeric(length(grid_t))
+set.seed(1)
+EstIntegral_2 <- numeric(length(grid_t))
+Diff_2 <- numeric(length(grid_t))
+Std_Error_2 <- numeric(length(grid_t))
 
 for (t in grid_t){
   u <- runif(n)
-  sample <- (sin(acos(u)))^{t-1} + u^t*(sin(acos(u)))^{-1}
+  sample_2 <- (sin(acos(u)))^{t-1} + u^t*(sin(acos(u)))^{-1}
   
-  EstIntegral_4[t] <- mean(sample)
+  EstIntegral_2[t] <- mean(sample_2)
   
-  Diff_4[t] <- exact_formula_C(t) - EstIntegral_4[t]
-  Std_Error_4[t] <- sd(sample)/sqrt(n)
+  Diff_2[t] <- exact_formula_C(t) - EstIntegral_2[t]
+  Std_Error_2[t] <- sd(sample_2)/sqrt(n)
 }
 
-rbind(mean_diff_4 = mean(Diff_4), mean_SE_4 = mean(Std_Error_4))
+rbind(mean_2 = mean(EstIntegral_2), mean_diff_2 = mean(Diff_2), mean_SE_2 = mean(Std_Error_2))
 ```
 
 #### Transformation 3
-##### Investigate the performance of integral for a fixed value of t
-```{r}
-t <- 1
-u <- runif(n)
-sample <- ((sin(pi/2*u))^t + (cos(pi/2*u))^t) * pi/2
-  
-EstIntegral <- mean(sample)
-  
-Diff <- exact_formula_C(t) - EstIntegral
-Std_Error <- sd(sample)/sqrt(n)
 
-rbind(EstIntegral, Diff, Std_Error)
-```
 ##### Using for loop to investigate the performance of integral across different values of t:
 ```{r}
-EstIntegral_4 <- numeric(length(grid_t))
-Diff_4 <- numeric(length(grid_t))
-Std_Error_4 <- numeric(length(grid_t))
+set.seed(1)
+EstIntegral_3 <- numeric(length(grid_t))
+Diff_3 <- numeric(length(grid_t))
+Std_Error_3 <- numeric(length(grid_t))
 
 for (t in grid_t){
   u <- runif(n)
   sample <- ((sin(pi/2*u))^t + (cos(pi/2*u))^t) * pi/2
   
-  EstIntegral_4[t] <- mean(sample)
+  EstIntegral_3[t] <- mean(sample)
   
-  Diff_4[t] <- exact_formula_C(t) - EstIntegral_4[t]
-  Std_Error_4[t] <- sd(sample)/sqrt(n)
+  Diff_3[t] <- exact_formula_C(t) - EstIntegral_3[t]
+  Std_Error_3[t] <- sd(sample)/sqrt(n)
 }
 
-rbind(mean_diff_4 = mean(Diff_4), mean_SE_4 = mean(Std_Error_4))
+rbind(mean_3=mean(EstIntegral_3), mean_diff_3 = mean(Diff_3), SE_3 = mean(Std_Error_3))
+
 ```
 
 According to the transformation methods above, transformation 3 has the smallest standard error. Thus we do the variance reduction based on transformation 3.
 
-The antithetic variate reduction is not applicable since the function is not monotone.
+The antithetic variate reduction is not applicable since the function is not monotone. Then we try control variates method first.
 
 #### 1.Control variates method
-```{r}
-t <- 1
-u <- runif(n,0,1)
-
-X <- ((sin(pi/2*u))^t + (cos(pi/2*u))^t) * pi/2
-Y <- pi^3/48*t-pi^3/16*t*u^2
-
-c <- -cov(X,Y)/var(Y)
-X_cv <- X+c*Y
-mean_cv <- mean(X_cv)
-SE_cv <- sd(X_cv)/sqrt(n)
-
-cbind(mean_cv,SE_cv)
-```
 
 ##### Using for loop to investigate the performance of integral across different values of t:
 ```{r}
+set.seed(1)
 EstIntegral_4 <- numeric(length(grid_t))
 Diff_4 <- numeric(length(grid_t))
 Std_Error_4 <- numeric(length(grid_t))
@@ -160,19 +111,22 @@ for (t in grid_t){
   u <- runif(n)
   X <- ((sin(pi/2*u))^t + (cos(pi/2*u))^t) * pi/2
   Y <- pi^3/48*t-pi^3/16*t*u^2
+  
   c <- -cov(X,Y)/var(Y)
-
   X_cv <- X+c*Y
   mean_cv <- mean(X_cv)
   SE_cv <- sd(X_cv)/sqrt(n)
 }
 
-rbind(mean_diff_4 = mean(mean_cv), mean_SE_4 = mean(SE_cv))
+rbind(mean = mean_cv, mean_SE = mean(SE_cv))
+improve_1 <- abs(mean(SE_cv)-mean(Std_Error_3))/mean(Std_Error_3)
+cat("The control variate method improves the accuarcy by",improve_1)
 ```
 
 ## b)
 ### Calculate the true value of the double integral
 ```{r}
+set.seed(1)
 f <- function(x, y) {
   r <- sqrt(x^2 + y^2)
   ifelse(r == 0, 1, sin(r) / r)  # Handle the removable singularity at (0,0)
@@ -185,12 +139,13 @@ result <- integrate(function(y) {
 }, -1, 1)
 
 # Print the result
-true_integral <- result$value
-true_integral
+true_integral_1b <- result$value
+true_integral_1b
 ```
 
 #### Alternatively, using another package:
 ```{r}
+set.seed(1)
 # install.packages('pracma')
 library(pracma)
 
@@ -204,17 +159,20 @@ dblquad(f, -1, 1, -1, 1)
 
 ### Pure Monte Carlo Methods
 ```{r}
+set.seed(1)
+
 n <- 10^5
 x <- runif(n)
 y <- runif(n)
-sample <- 4 * sin(sqrt(x^2 + y^2))/sqrt(x^2 + y^2)
+sample_1b <- 4 * sin(sqrt(x^2 + y^2))/sqrt(x^2 + y^2)
 
-EstIntegral <- mean(sample)
-Diff <- true_integral - EstIntegral
-Std_Error <- sd(sample)/sqrt(n)
+EstIntegral_1b <- mean(sample_1b)
+Diff_1b <- true_integral_1b - EstIntegral_1b
+Std_Error_1b <- sd(sample)/sqrt(n)
 
-rbind(EstIntegral, Diff, Std_Error)
+rbind(EstIntegral_1b, Diff_1b, Std_Error_1b)
 ```
+
 #### 1.Antithetic Variate reduction
 ```{r}
 set.seed(1)
@@ -223,23 +181,30 @@ x <- runif(n)
 y <- runif(n)
 sample1 <- 4 * sin(sqrt(x^2 + y^2))/sqrt(x^2 + y^2)
 sample2 <- 4 * sin(sqrt((1-x)^2 + (1-y)^2))/sqrt((1-x)^2 + (1-y)^2)
-EstIntegral <- mean((sample1+sample2)/2)
-Diff <- true_integral - EstIntegral
-Std_Error <- sd((sample1+sample2)/2)/sqrt(n)
+EstIntegral_1b1 <- mean((sample1+sample2)/2)
+Diff_1b1 <- true_integral_1b - EstIntegral_1b1
+Std_Error_1b1 <- sd((sample1+sample2)/2)/sqrt(n)
 
-rbind(EstIntegral, Diff, Std_Error)
+rbind(EstIntegral_1b1, Diff_1b1, Std_Error_1b1)
+improve_2 <- abs(Std_Error_1b1-Std_Error_1b)/Std_Error_1b
+cat("The antithetic variate reduction improves the accuarcy by",improve_2)
 ```
 
 #### 2.Stratified sampling
 ```{r}
+set.seed(1)
 n <- 10^5
 u <- runif(n)
 j <- 1:n
-sample <- 4 * sin(sqrt(((u+j-1)/n)^2 + ((u+j-1)/n)^2))/sqrt(((u+j-1)/n)^2 + ((u+j-1)/n)^2)
+sample_1b2 <- 4 * (sin(sqrt(((u+j-1)/n)^2 + ((u+j-1)/n)^2)))/sqrt(((u+j-1)/n)^2 + ((u+j-1)/n)^2)
 
-Mu_SS <- mean(sample)
+Mu_SS <- mean(sample_1b2)
 Diff <- true_integral - Mu_SS
-SE_SS <- sd(sample)/sqrt(n)
+SE_SS <- sd(sample_1b2)/sqrt(n)
 
 rbind(Mu_SS, Diff, SE_SS)
+improve_3 <- abs(SE_SS-Std_Error_1b)/Std_Error_1b
+cat("The statified sampling improves the accuarcy by",improve_3)
 ```
+
+Therefore, the antithetic variate reduction can improve the accuarcy by 86.47548 %, which is the best.
