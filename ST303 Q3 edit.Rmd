@@ -33,7 +33,7 @@ $$
 Check:
 
 $$
-\mathbb{E}(Y_t) = Y_0 + \delta t, \quad \text{since } \mathbb{E} \left( \int_0^t 2\sqrt{Y_r} \, dW_r  | F_s\right) = 0
+\mathbb{E}(Y_t) = Y_0 + \delta t, \quad \text{since } \mathbb{E} \left( \int_0^t 2\sqrt{Y_s} \, dW_s\right) = 0
 $$
 
 
