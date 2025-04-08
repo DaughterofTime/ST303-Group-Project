@@ -39,8 +39,6 @@ alpha <- groups$Var4
 ```
 
 
-
-A temporary check function:
 ```{r}
 theoretical_mean <- lambda - alpha*nu/(2*(m - 1))
 theoretical_var <- alpha^2/(2*m - 3) * (1 + nu^2/(4*(m - 1)^2))
@@ -49,6 +47,7 @@ theoretical_var <- alpha^2/(2*m - 3) * (1 + nu^2/(4*(m - 1)^2))
 
 ```{r}
 Q2_summary <- data.frame(m, nu, lambda, alpha, theoretical_mean, theoretical_var)
+Q2_summary
 ```
 
 
@@ -222,6 +221,7 @@ envelope_3_empirical_acceptance <- unlist(lapply(1:length(nu), function(i) lengt
 # update Q2_summary
 Q2_summary <- Q2_summary %>% 
   mutate(envelop_3_empirical_mean, envelop_3_empirical_var, envelope_3_empirical_acceptance)
+Q2_summary
 ```
 
 ### Without transformation
@@ -468,15 +468,14 @@ matrix <- matrix(numeric(length = length(nu)*length(quantile_percents)), nrow = 
 for (i in 1:length(nu)){
   matrix[i,] <- quantile(X_envelope_3[[i]], prob = quantile_percents)
 }
+
+dim(matrix)
 ```
 
 ```{r}
 Q2_empirical_quantiles <- as.data.frame(matrix) %>% mutate(index = 1:length(nu))
 colnames(Q2_empirical_quantiles) <- c(paste(as.character(quantile_percents*100), '%', sep = ''), 'index')
-Q2_empirical_quantiles
-```
 
-```{r}
 Q2_summary_empirical_quantiles <- Q2_summary %>% 
   mutate(index = 1:length(nu)) %>%
   select(m, nu, lambda, alpha, index, theoretical_mean, theoretical_var) %>%
@@ -485,6 +484,7 @@ Q2_summary_empirical_quantiles <- Q2_summary %>%
 
 Q2_summary_empirical_quantiles
 ```
+
 
 ### CLT quantiles
 ```{r}
