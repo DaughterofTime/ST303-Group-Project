@@ -105,7 +105,9 @@ for (t in grid_t){
   Std_Error_3[t] <- sd(sample_3)/sqrt(n)
 }
 
-rbind(mean_3=mean(sample_3), mean_diff_3 = mean(Diff_3), SE_3 = mean(Std_Error_3))
+rbind(mean_diff_3 = mean(Diff_3), SE_3 = mean(Std_Error_3))
+
+EstIntegral_3
 ```
 
 The following table shows the comparison between different methods:
@@ -155,9 +157,9 @@ then we choose $Y=T_1-(\frac{\pi}2 -\frac{\pi^{3}}{48}t)=\frac{\pi}2 -\frac{\pi^
 ##### Using for loop to investigate the performance of integral across different values of t:
 ```{r}
 set.seed(1)
-EstIntegral_4 <- numeric(length(grid_t))
+EstIntegral_cv1 <- numeric(length(grid_t))
 Diff_cv1 <- numeric(length(grid_t))
-Std_Error_4 <- numeric(length(grid_t))
+SE_cv1 <- numeric(length(grid_t))
 
 for (t in grid_t){
   u <- runif(n)
@@ -166,37 +168,50 @@ for (t in grid_t){
   
   c <- -cov(X,Y)/var(Y)
   X_cv1 <- X+c*Y
-  mean_cv1 <- mean(X_cv1)
-  Diff_cv1 <- mean(sample_3)- mean_cv1
-  SE_cv1 <- sd(X_cv1)/sqrt(n)
+  EstIntegral_cv1[t] <- mean(X_cv1)
+  Diff_cv1[t] <- EstIntegral_3[t] -  mean(X_cv1)
+  SE_cv1[t] <- sd(X_cv1)/sqrt(n)
 }
 
-cbind(Mean = mean_cv1, Mean_diff_cv=Diff_cv1, SE_cv = mean(SE_cv1))
+#cbind(Mean_diff_cv=Diff_cv1, SE_cv = mean(SE_cv1))
+Diff_cv1
+print('-----------------------------')
+SE_cv1
+print('-----------------------------')
+Std_Error_3
 ```
 
 
 ```{r}
 set.seed(1)
-EstIntegral_5 <- numeric(length(grid_t))
-Diff_5 <- numeric(length(grid_t))
-Std_Error_5 <- numeric(length(grid_t))
+EstIntegral_cv2 <- numeric(length(grid_t))
+Diff_cv2 <- numeric(length(grid_t))
+SE_cv2 <- numeric(length(grid_t))
 
 for (t in grid_t){
   u <- runif(n)
-  X_tilde <- ((sin(pi/2*u))^t) * pi/2
+  X_tilde <- ((sin(pi/2*u + pi/4))^t) * pi/2
   Y_2 <- X_tilde - mean(X_tilde)
   c <- -cov(X,Y_2)/var(Y_2)
+  
+  theta_hat <- X+c*Y_2
+  EstIntegral_cv2[t] <- mean(theta_hat)
+  SE_cv2[t] <- sd(theta_hat)/sqrt(n)
+  Diff_cv2[t] <- EstIntegral_3[t] - mean(theta_hat)
 }
 
-theta_hat <- X+c*Y_2
-mean_cv2 <- mean(theta_hat)
-SE_cv2 <- sd(theta_hat)/sqrt(n)
-Diff_cv2 <- mean(sample_3)- mean_cv2
 
-cbind(mean = mean_cv2, Mean_diff_cv=Diff_cv2, SE_cv = mean(SE_cv2))
-improve_1 <- abs(mean(SE_cv2)-mean(Std_Error_3))/mean(Std_Error_3)
-improve_1
-cat("The control variate method reduced the standard error by",improve_1)
+
+# cbind(mean = mean_cv2, Mean_diff_cv=Diff_cv2, SE_cv = mean(SE_cv2))
+# improve_1 <- abs(mean(SE_cv2)-mean(Std_Error_3))/mean(Std_Error_3)
+# improve_1
+# cat("The control variate method reduced the standard error by",improve_1)
+
+Diff_cv2
+print('-----------------------------')
+SE_cv2
+print('-----------------------------')
+Std_Error_3
 ```
 
 #### 2.Stratified Sampling
