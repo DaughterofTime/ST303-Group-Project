@@ -134,7 +134,7 @@ tk_index <- (1:10)/(10/1000) + 1
 Rtk <- Rt_matrix[tk_index, ]  # rows: tk, cols: paths
 tk_payoff <- pmax(Rtk - K, 0)  # (Rt - K)+
 exercise_time <- apply(tk_payoff, 2, function(payoffs) {
-  idx <- which(payoffs > 0)[1]  # first positive payoff
+  idx <- which.max(payoffs)  # first positive payoff
   if (is.na(idx)) return(NA)   # never exercised
   return(idx)  # tk index (1 to 10)
 })
@@ -142,7 +142,7 @@ exercise_time <- apply(tk_payoff, 2, function(payoffs) {
 tau <- ifelse(is.na(exercise_time), NA, exercise_time)  # τ in 1:10
 hist(tau, prob = T, breaks = 20)
 lines(density(tau[!is.na(tau)]))
-summary(tau) # median = 4, mean = 3.967
+summary(tau) # median = 8, mean = 6.89
 ```
 
 ### (d)
