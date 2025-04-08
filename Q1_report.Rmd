@@ -1,0 +1,294 @@
+---
+title: "Q1"
+output:
+  html_document: default
+  pdf_document: default
+date: "2025-04-07"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Question 1
+## a)
+### The true values
+The following diagram shows the exact values of C(t) for t from 1 to 100.
+```{r}
+grid_t <- 1:100
+
+exact_formula_C <- function(t){
+  (sqrt(pi) * gamma((t + 1)/2))/gamma(t/2 + 1)
+}
+
+exact_values_C <- exact_formula_C(grid_t)
+plot(grid_t, exact_values_C, type = 'l')
+```
+
+### Monte Carlo Methods
+```{r}
+n <- 10^6
+```
+
+#### Transformation 1
+
+For transformation 1, we use $u=sinx$, then $x=arcsin(u)$. When $x=0$, then $u=0$, and when $x=\pi/2$, then $u=1$.
+We compute:
+$$
+    \int_{0}^{\pi/2} {(\sin(x))^{t}+(\cos(x))^{t}}\,dx \overset{x=\arcsin(u)}{=} \int_{0}^{1} {u^{t}[\cos(\arcsin(u)]^{-1}+[\cos(\arcsin(u)]^{t-1}}\,du  \overset{\mathcal{U}\overset{d}{=}\mathcal{U}(0,1)} {=}\\ \mathbb{E}\left[{u^{t}[\cos(\arcsin(u)]^{-1}+[\cos(\arcsin(u)]^{t-1}}\right] \overset{MC}{\approx} \sum_{i=1}^{N}[u^{t}[\cos(\arcsin(u)]^{-1}+[\cos(\arcsin(u)]^{t-1}]
+$$
+
+##### Using for loop to investigate the performance of integral across different values of t:
+```{r}
+set.seed(1)
+EstIntegral_1 <- numeric(length(grid_t))
+Diff_1 <- numeric(length(grid_t))
+Std_Error_1 <- numeric(length(grid_t))
+
+for (t in grid_t){
+  u <- runif(n)
+  sample_1 <- u^t*1/(cos(asin(u)))+(cos(asin(u)))^(t-1)
+  
+  EstIntegral_1[t] <- mean(sample_1)
+  
+  Diff_1[t] <- exact_formula_C(t) - EstIntegral_1[t]
+  Std_Error_1[t] <- sd(sample_1)/sqrt(n)
+}
+
+rbind(mean_1=mean(EstIntegral_1),mean_diff_1 = mean(Diff_1), mean_SE_1 = mean(Std_Error_1))
+```
+
+#### Transformation 2
+For transformation 2, we use $u=cosx$, then $x=\arccos(u)$. When $x=0$, then $u=0$, and when $x=\pi/2$, then $u=1$.
+We compute:
+$$
+\int_{0}^{\pi/2} {(\sin(x))^{t}+(\cos(x))^{t}}\,dx \overset{ x=\arccos(u)}{=} \int_{0}^{1} {u^{t}[\sin(\arccos(u)]^{-1}+[\sin(\arccos(u)]^{t-1}}\,du  \overset{\mathcal{U}\overset{d}{=}\mathcal{U}(0,1)} {=}\\ \mathbb{E}\left[{u^{t}[\sin(\arccos(u)]^{-1}+[\sin(\arccos(u)]^{t-1}}\right] \overset{MC}{\approx} \sum_{i=1}^{N}[u^{t}[\sin(\arccos(u)]^{-1}+[\sin(\arccos(u)]^{t-1}]
+$$
+##### Using for loop to investigate the performance of integral across different values of t:
+```{r}
+set.seed(1)
+EstIntegral_2 <- numeric(length(grid_t))
+Diff_2 <- numeric(length(grid_t))
+Std_Error_2 <- numeric(length(grid_t))
+
+for (t in grid_t){
+  u <- runif(n)
+  sample_2 <- (sin(acos(u)))^{t-1} + u^t*(sin(acos(u)))^{-1}
+  
+  EstIntegral_2[t] <- mean(sample_2)
+  
+  Diff_2[t] <- exact_formula_C(t) - EstIntegral_2[t]
+  Std_Error_2[t] <- sd(sample_2)/sqrt(n)
+}
+
+rbind(mean_2=mean(EstIntegral_2),mean_diff_2 = mean(Diff_2), mean_SE_2 = mean(Std_Error_2))
+```
+According to the above results, transformation 1 and 2 have exactly the same mean and standard error.
+
+#### Transformation 3
+For transformation 3, we use $u=\frac{2}\pi*x$, then $x=\frac{\pi}2u$. When $x=0$, then $u=0$, and when $x=\pi/2$, then $u=1$.
+We compute:
+$$
+\int_{0}^{\pi/2} {(\sin(x))^{t}+(\cos(x))^{t}}\,dx \overset{x=\frac{\pi}2u}{=} \int_{0}^{1} {[(\sin((\frac{\pi}2u))^{t}+((\cos(\frac{\pi}2u))^{t}]\frac{\pi}2}\,du  \overset{\mathcal{U}\overset{d}{=}\mathcal{U}(0,1)} {=}\\ \mathbb{E}\left[\frac{\pi}2[(\sin((\frac{\pi}2u))^{t}+((\cos(\frac{\pi}2u))^{t}]\right] \overset{MC}{\approx} \sum_{i=1}^{N}\frac{\pi}2[(\sin((\frac{\pi}2u))^{t}+((\cos(\frac{\pi}2u))^{t}]
+$$
+##### Using for loop to investigate the performance of integral across different values of t:
+```{r}
+set.seed(1)
+EstIntegral_3 <- numeric(length(grid_t))
+Diff_3 <- numeric(length(grid_t))
+Std_Error_3 <- numeric(length(grid_t))
+
+for (t in grid_t){
+  u <- runif(n)
+  sample <- ((sin(pi/2*u))^t + (cos(pi/2*u))^t) * pi/2
+  
+  EstIntegral_3[t] <- mean(sample)
+  
+  Diff_3[t] <- exact_formula_C(t) - EstIntegral_3[t]
+  Std_Error_3[t] <- sd(sample)/sqrt(n)
+}
+
+rbind(mean_3=mean(EstIntegral_3), mean_diff_3 = mean(Diff_3), SE_3 = mean(Std_Error_3))
+```
+
+The following table shows the comparison between different methods:
+```{r}
+df_ts<-data.frame(
+  Method=c("Transformation 1","Transformation 2","Transformation 3"),
+  Mean=c(mean(EstIntegral_1),mean(EstIntegral_2),mean(EstIntegral_3)),
+  Mean_diff=c(mean(Diff_1),mean(Diff_1),mean(Diff_3)),
+  Standar_error=c(mean(Std_Error_1),mean(Std_Error_1),mean(Std_Error_3))
+)
+df_ts
+```
+
+According to the transformation methods above, transformation 3 has the smallest difference between estimated mean and actual mean, and also the smallest standard error. Thus we do the variance reduction based on transformation 3.
+
+The antithetic variate reduction is not applicable since the function is not monotone. Then we try control variates method first.
+
+#### 1.Control variates method
+We have to estimate
+$$
+  \theta = \mathbb{E}(X) = \int_{0}^{1}{\frac{\pi}2[(\sin(\frac{\pi}2u))^{t}+(\cos(\frac{\pi}2))^{t}]}\,du\quad\\
+  \text{where}\quad X=g(U)=\frac{\pi}2[(\sin(\frac{\pi}2u))^{t}+(\cos(\frac{\pi}2u)^{t}],\quad U \overset{d}{\sim} \mathcal{U}(0,1).
+$$
+We want to find a random variable $Y$ with mean $0$ and a good constant $c$ such that $\mathbb{E}(X+cY) \approx \theta$.
+
+We consider the Taylor polynomial of $g$ of degree 2 at 0:
+$$
+    T_1(u) = g(0) + g^{'}(0)(u-0) + \frac{1}{2}g^{''}(0)(u-0)^2 + O(u^3) = \frac{\pi}2 -\frac{\pi^{3}t}{16}u^{2},\\
+     \quad\text{where}\quad g^{'}(u) =  \frac{\pi^2}{4}[t(\sin(\frac{\pi}{2}u))^{t-1}\cos(\frac{\pi}{2}u))-t(\cos(\frac{\pi}{2}u))^{t-1}\sin(\frac{\pi}{2}u))],\quad g^{'}(0) =0\\
+    \quad g^{''}(u) =\frac{\pi^4}{4}[t(t-1)\frac{\pi}{2}\sin(\frac{\pi}{2}u))^{t-2}\cos^{2}(\frac{\pi}{2})-\frac{\pi}{2}t\sin(\frac{\pi}{2}u))^{t}+t(t-1)\frac{\pi}{2}\cos(\frac{\pi}{2}u))^{t-2}\sin^{2}(\frac{\pi}{2})-\frac{\pi}{2}t\cos(\frac{\pi}{2}u))^{t}],\\
+    \quad g^{''}(0) =-\frac{\pi^3}{8}t.
+$$
+We take $T_1 = \frac{\pi}2 -\frac{\pi^{3}t}{16}u^{2}$.  At this point, we define $Y$ in terms of $T_1$, but we need to have mean $0$. Therefore, we compute:
+$$
+    \mathbb{E}(T_1)=\frac{\pi}2 -\frac{\pi^{3}t}{16}\mathbb{E}(u^{2})=\frac{\pi}2 -\frac{\pi^{3}}{16}t*\frac{1}{3}=\frac{\pi}2 -\frac{\pi^{3}}{48}t,
+$$
+then we choose $Y=T_1-(\frac{\pi}2 -\frac{\pi^{3}}{48}t)=\frac{\pi}2 -\frac{\pi^{3}t}{16}u^{2} -\frac{\pi}2 + \frac{\pi^{3}}{48}t = \frac{\pi^3}{48}t-(\frac{\pi^3}{16}t)u^{2}$. We estimate $\theta$ via the following algorithm:
+
+\begin{itemize}
+  \item Simulate $U_1, U_2, \ldots, U_n \overset{d}{\sim} \mathcal{U}(0,1)$.
+  \item Simulate $X$: $g(u_1), g(u_2), \ldots, g(u_n)$.
+  \item Simulate $Y$: $\frac{\pi^3}{48}t-(\frac{\pi^3}{16}t)u_1^{2}, \frac{\pi^3}{48}t-(\frac{\pi^3}{16}t)u_2^{2}, \ldots, \frac{\pi^3}{48}t-(\frac{\pi^3}{16}t)u_n^{2}$.
+  \item Calculate the $\text{Cov}(X,Y)$ and $\text{Var}(Y)$ with the samples to determine $c^{\star}$.
+  \item Approximate $\theta$ with the mean of $X+c^{\star}Y$ and standard errors with the standard errors of $X+c^{\star}Y$.
+\end{itemize}
+
+##### Using for loop to investigate the performance of integral across different values of t:
+```{r}
+set.seed(1)
+EstIntegral_4 <- numeric(length(grid_t))
+Diff_4 <- numeric(length(grid_t))
+Std_Error_4 <- numeric(length(grid_t))
+
+for (t in grid_t){
+  u <- runif(n)
+  X <- ((sin(pi/2*u))^t + (cos(pi/2*u))^t) * pi/2
+  Y <- pi^3/48*t-pi^3/16*t*u^2
+  
+  c <- -cov(X,Y)/var(Y)
+  X_cv <- X+c*Y
+  mean_cv <- mean(X_cv)
+  SE_cv <- sd(X_cv)/sqrt(n)
+}
+
+rbind(mean = mean_cv, mean_SE = mean(SE_cv))
+improve_1 <- abs(mean(SE_cv)-mean(Std_Error_3))/mean(Std_Error_3)
+cat("The control variate method reduced the standard error by",improve_1)
+```
+
+## (b)
+### Calculate the true value of the double integral
+```{r}
+set.seed(1)
+f <- function(x, y) {
+  r <- sqrt(x^2 + y^2)
+  ifelse(r == 0, 1, sin(r) / r)  # Handle the removable singularity at (0,0)
+}
+
+result <- integrate(function(y) {
+  sapply(y, function(yi) {
+    integrate(function(x) f(x, yi), -1, 1)$value
+  })
+}, -1, 1)
+
+# Print the result
+true_integral_1b <- result$value
+true_integral_1b
+```
+
+#### Alternatively, using another package:
+```{r}
+set.seed(1)
+# install.packages('pracma')
+library(pracma)
+
+f <- function(x, y) {
+  r <- sqrt(x^2 + y^2)
+  ifelse(r == 0, 1, sin(r) / r) 
+}
+
+dblquad(f, -1, 1, -1, 1)
+```
+
+### Pure Monte Carlo Methods
+Since the equation os symmetric, we can compute: 
+$$
+    \int_{-1}^{1}\int_{-1}^{1}\frac{\sin(\sqrt{x^{2}+y^{2}})}{\sqrt{x^{2}+y^{2}}}\,dx\,dy{=}4\int_{0}^{1}\int_{0}^{1}\frac{\sin(\sqrt{x^{2}+y^{2}})}{\sqrt{x^{2}+y^{2}}}\,dx\,dy  
+    \overset{(X, Y) ind \overset{d}{\sim} \mathcal{U}(0,1) }{=}\\
+    4\mathbb{E}[\frac{\sin(\sqrt{x^{2}+y^{2}})}{\sqrt{x^{2}+y^{2}}} ] \overset{MC}{\approx} \frac{4}{N}\sum_{i=1}^{N}\frac{\sin(\sqrt{x^{2}+y^{2}})}{\sqrt{x^{2}+y^{2}}}\,dx\,dy ,
+$$
+where $X_1,\ldots,X_N \overset{d}{\sim} \mathcal{U}(0,1)$, $Y_1,\ldots,Y_N \overset{d}{\sim} \mathcal{U}(0,1)$, and the samples are independent.
+
+```{r}
+set.seed(1)
+
+n <- 10^5
+x <- runif(n)
+y <- runif(n)
+sample_mc <- 4 * sin(sqrt(x^2 + y^2))/sqrt(x^2 + y^2)
+
+EstIntegral_mc <- mean(sample_mc)
+Diff_mc <- true_integral_1b - EstIntegral_mc
+Std_Error_mc <- sd(sample_mc)/sqrt(n)
+
+rbind(EstIntegral_mc, Diff_mc, Std_Error_mc)
+```
+
+#### 1.Antithetic Variate Reduction
+We need to calculate
+$$
+\frac{4}{N}\sum_{i=1}^{N}\frac{\sin(\sqrt{(x^2 + y^2)})}{\sqrt{x^2 + y^2}}=\frac{4}{N}\sum_{i=1}^{N}\frac{\sin(\sqrt{((1-x)^2 + (1-y)^2)})}{\sqrt{(1-x)^2 + (1-y)^2}},
+$$
+where $X_1,\ldots,X_N \overset{d}{\sim} \mathcal{U}(0,1)$, $Y_1,\ldots,Y_N \overset{d}{\sim} \mathcal{U}(0,1)$, and the samples are independent.
+```{r}
+set.seed(1)
+n <- 10^5
+x <- runif(n)
+y <- runif(n)
+sample1 <- 4 * sin(sqrt(x^2 + y^2))/sqrt(x^2 + y^2)
+sample2 <- 4 * sin(sqrt((1-x)^2 + (1-y)^2))/sqrt((1-x)^2 + (1-y)^2)
+EstIntegral_av <- mean((sample1+sample2)/2)
+Mean_diff_av <- true_integral_1b - EstIntegral_av
+Std_Error_av <- sd((sample1+sample2)/2)/sqrt(n)
+
+rbind(EstIntegral_av, Mean_diff_av, Std_Error_av)
+improve_av <- abs(Std_Error_av-Std_Error_mc)/Std_Error_mc
+cat("The antithetic variate reduction improves the accuarcy by",improve_av)
+```
+
+#### 2.Stratified Sampling
+Since $1 - U_i \overset{d}{=} U_i$, we can compute
+$$
+h(U)=\frac{4}{N}\sum_{i=1}^{N}\frac{\sin(\sqrt{(\frac{(U_i+i-1)}{n})^{2} + ((\frac{(U_j+j-1)}{n})^2})}{\sqrt{(\frac{(U_i+i-1)}{n})^{2} + ((\frac{(U_j+j-1)}{n})^2})},
+$$
+where $X_1,\ldots,X_N \overset{d}{\sim} \mathcal{U}(0,1)$, $Y_1,\ldots,Y_N \overset{d}{\sim} \mathcal{U}(0,1)$, and the samples are independent.
+```{r}
+set.seed(1)
+n <- 10^5
+u <- runif(n)
+j <- 1:n
+sample_1b2 <- 4 * (sin(sqrt(((u+j-1)/n)^2 + ((u+j-1)/n)^2)))/sqrt(((u+j-1)/n)^2 + ((u+j-1)/n)^2)
+
+Mu_SS <- mean(sample_1b2)
+Diff_SS <- true_integral_1b - Mu_SS
+SE_SS <- sd(sample_1b2)/sqrt(n)
+
+rbind(Mu_SS, Diff, SE_SS)
+improve_SS <- abs(Mu_SS-EstIntegral_mc)/EstIntegral_mc
+cat("The statified sampling imprved the result by?")
+```
+
+The following table shows the comparison between different methods:
+```{r}
+df_1b<-data.frame(
+  Method=c("Ture Integral Value","Monte Carlo Method","Antithetic Variate Reduction","Stratified Sampling"),
+  Mean=c(true_integral_1b,mean(EstIntegral_mc),mean(EstIntegral_av),mean(Mu_SS)),
+  Mean_diff=c("NA",mean(Diff_mc),mean(Diff_av),mean(Diff_SS)),
+  Standar_error=c("NA",mean(Std_Error_mc),mean(Std_Error_av),mean(SE_SS))
+)
+df_1b
+```
+
+Therefore, the antithetic variate reduction can improve the accuarcy by 86.47548 %, which is the best.
