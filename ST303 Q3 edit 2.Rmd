@@ -210,6 +210,39 @@ This ensures that $Y_t \geq 0$, so that $R_t = \sqrt{Y_t}$ is always real-valued
 
 (4) Variance Reduction:
 
+1. Control Variate:
+
+Let $X = max(max(R_t)-K,\ 0), \ for\ t=1,2,...,10$.
+Set $\tilde{X} = max(R_t)-K$, then $Y = \tilde{X} - E(\tilde{X})$. Check: $E(Y) = 0$.
+
+```{r}
+max_Rtk <- apply(Rtk, 2, max)
+X_tilde = max_Rtk - K
+X = pmax(X_tilde, 0)
+Y = X_tilde - mean(X_tilde)
+mean(Y) # E(Y)= -7.773459e-17 which is approximately equal to zero
+```
+
+Calculate $c=-\frac{Cov(X,Y)}{Var(Y)}$:
+
+```{r}
+c <- -cov(X,Y)/var(Y)
+c
+```
+
+Then $\hat{\theta}=X + cY$, calculate $Var(\hat{\theta})$ and compare it to $Var(X)$:
+```{r}
+theta_hat = X + c*Y
+var(theta_hat)
+var(X)
+
+(var(X)-var(theta_hat))/var(X)
+
+cat(var(X), var(theta_hat), "Improved by 99.38%")
+```
+
+
+
 
 
 
