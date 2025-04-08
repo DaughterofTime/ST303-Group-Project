@@ -127,14 +127,14 @@ matplot(t, Rt_matrix, type = "l", lty = 1, col = rainbow(M),
 ```
 
 Second, construct payoff matrix for exercisable dates.
-The option will be exercised when the first time that payoff becomes positive. Assign this values to the exercise time $\tau$.
+The option will be exercised when the highest payoff is reached. Assign this values to the exercise time $\tau$.
 
 ```{r}
 tk_index <- (1:10)/(10/1000) + 1
 Rtk <- Rt_matrix[tk_index, ]  # rows: tk, cols: paths
 tk_payoff <- pmax(Rtk - K, 0)  # (Rt - K)+
 exercise_time <- apply(tk_payoff, 2, function(payoffs) {
-  idx <- which.max(payoffs)  # first positive payoff
+  idx <- which.max(payoffs)  # highest positive payoff
   if (is.na(idx)) return(NA)   # never exercised
   return(idx)  # tk index (1 to 10)
 })
