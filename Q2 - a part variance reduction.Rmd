@@ -1,7 +1,7 @@
 ---
-title: "Q2"
+title: "Q2 - a part variance reduction"
 output: html_document
-date: "2025-03-26"
+date: "2025-04-08"
 ---
 
 ```{r setup, include=FALSE}
@@ -109,65 +109,3 @@ Q2_summary <- Q2_summary %>%
   mutate(envelop_3_empirical_mean, envelop_3_empirical_var, envelope_3_empirical_acceptance)
 Q2_summary
 ```
-
-## c)
-### Empirical quantiles
-```{r}
-quantile_percents <- c(0.05, 0.1, 0.25, 0.5, 0.75, 0.9, 0.95)
-
-matrix <- matrix(numeric(length = length(nu)*length(quantile_percents)), nrow = length(nu))
-
-for (i in 1:length(nu)){
-  matrix[i,] <- quantile(X_envelope_3[[i]], prob = quantile_percents)
-}
-```
-
-```{r}
-Q2_empirical_quantiles <- as.data.frame(matrix) %>% mutate(index = 1:length(nu))
-colnames(Q2_empirical_quantiles) <- c(paste0('Empirical_', quantile_percents*100, '%'), 'index')
-
-Q2_summary_quantiles <- Q2_summary %>% 
-  mutate(index = 1:length(nu)) %>%
-  select(m, nu, lambda, alpha, index, theoretical_mean, theoretical_var) %>%
-  left_join(Q2_empirical_quantiles, by = join_by(index)) %>%
-  select(-index)
-Q2_summary_quantiles
-```
-
-
-### CLT quantiles
-Try to make the unrealistic assumption of 
-$$
-\frac{X - E(X)}{\sqrt{Var(X)}} \sim N(0, 1)
-$$
-
-and estimate quantiles accordingly:
-$$
-quantile = E(X) + \sqrt{Var(X)}\Phi^{-1}(p)
-$$
-
-```{r}
-matrix <- matrix(numeric(length = length(nu)*length(quantile_percents)), nrow = length(nu))
-
-for (i in 1:length(nu)){
-  matrix[i,] <- Q2_summary$theoretical_mean[i] + sqrt(Q2_summary$theoretical_var[i]) * qnorm(quantile_percents, mean = 0, sd = 1)
-}
-```
-
-```{r}
-Q2_CLT_quantiles <- as.data.frame(matrix) %>% mutate(index = 1:length(nu))
-colnames(Q2_CLT_quantiles) <- c(paste0('CLT_', quantile_percents*100, '%'), 'index')
-
-Q2_summary_quantiles <- Q2_summary_quantiles %>% 
-  mutate(index = 1:length(nu)) %>%
-  left_join(Q2_CLT_quantiles, by = join_by(index)) %>%
-  select(-index)
-Q2_summary_quantiles
-```
-
-### Compare two types of quantiles:
-```{r}
-Q2_summary_quantiles %>%
-  filter(nu == -5)
-```
-
