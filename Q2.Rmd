@@ -8,7 +8,7 @@ date: "2025-03-26"
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-```{r}
+```{r include=FALSE}
 library(tidyverse)
 library(ggplot2)
 ```
@@ -54,20 +54,35 @@ Q2_summary
 
 ### With transformation
 $$
-u = tan^{-1}(\frac{x - \lambda}{\alpha}), u \in [-\frac{\pi}{2}, \frac{\pi}{2}]
+y = \tan^{-1}(\frac{x - \lambda}{\alpha}), y \in [-\frac{\pi}{2}, \frac{\pi}{2}]
 $$
 We get
 $$
-f(u) \propto (cos(u))^{2m}e^{-\nu u}
+f(y) \propto (\cos(y))^{2m}e^{-\nu y}
 $$
-
-
-
-
-#### Envelope function 1 (uniform distribution)
+We have tried the following five envelop functions. We used transformation for the first three envelop functions, and no transformation for the last two envolop functions.
+Envelope function 1 (uniform distribution)
 $$
-g(y) = \frac{1}{\pi}, Y \sim Unif[-\frac{\pi}{2}, \frac{\pi}{2}]
+f(y) \propto (\cos(y))^{2m}e^{-\nu y}\\
+y = \tan^{-1}(\frac{x - \lambda}{\alpha}), y \in [-\frac{\pi}{2}, \frac{\pi}{2}]\\
+g(y)=\frac{1}{b-a}=\frac{1}{\frac{\pi}{2}-(-\frac{\pi}{2})}=\frac{1}{\pi}, Y \sim Unif[-\frac{\pi}{2}, \frac{\pi}{2}]
+
 $$
+Envelope function 2
+$$
+g(y)\propto e^{-\nu y},
+y=-\frac{1}{2}\log[u(e^{-\frac{\pi}{2}\nu}-e^{\frac{\pi}{2}\nu})+e^{\frac{\pi}{2}\nu}]
+$$
+Envelope function 3
+$$
+g(y)\propto\frac{1}{2}\cos(y), y=\arcsin(-\frac{\nu}{2m-1})
+$$
+Envelope function 4 - Cauchy distribution (without transformation)
+$$
+f(y) \propto (1+(\frac{y-\lambda}{\alpha})^{2})^{-m}e^{-\nu\arctan(\frac{x-\lambda}{\alpha})}\\
+g(y) \propto (1+(\frac{y-\lambda}{\alpha})^{2})^{-1}, y=\frac{\nu \alpha}{2(1-m)}+\lambda
+$$
+Envelope function 5
 
 ```{r}
 # Generate Y
@@ -75,7 +90,7 @@ n <- 10^5
 Y <- runif(n) * pi - pi/2
 ```
 
-```{r}
+```{r echo=TRUE}
 # Generate the sample using AR
 ptm <- proc.time()
 U <- runif(n)
