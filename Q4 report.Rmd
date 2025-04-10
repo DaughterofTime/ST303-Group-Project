@@ -11,10 +11,9 @@ output:
 
 ### (a)
 
-First, we create a function that models one game \
-Build deck with numbers 1-8 (with four numbers repeated) \
-Randomly deals 4 cards to each player \
-Determines winner based on who has lowest sum \
+First, we create a function that models one game and builds a deck with numbers 1-8 (with four numbers repeated).
+Then, we randomly deal 4 cards to each player.
+The player who has the lowest sum will be the winner of the game.
 
 ```{r}
 sim_game <- function() {
@@ -71,12 +70,12 @@ cat("\nPlayer 1 expected value:", round(avg_p1, 4))
 cat("\nPlayer 2 expected value:", round(avg_p2, 4))
 ```
 
-Conclusion: \
-The payoff distributions for both players are mirror images of each other. \
-The most common outcomes are -1, 0, 1, and 2, with less frequent outcomes at -3, -2, 3, and 4. \
-The expected values (Player 1: -0.0077, Player 2: 0.0077) are essentially zero. \
-The game appears to be fair, with neither player having a significant advantage. \
-Ties (payoff of 0) occur frequently, as shown by the peak at 0 in both histograms. \
+Conclusion: 
+The payoff distributions for both players are mirror images of each other.\
+The most common outcomes are -1, 0, 1, and 2, with less frequent outcomes at -3, -2, 3, and 4.\ 
+The expected values (Player 1: -0.0077, Player 2: 0.0077) are essentially zero.\ 
+The game appears to be fair, with neither player having a significant advantage.\ 
+Ties (payoff of 0) occur frequently, as shown by the peak at 0 in both histograms. 
 
 ### (b) 
 
@@ -145,11 +144,11 @@ cat("\nThe fair game had expected value around 0, so this is definitely better")
 ```
 
 Conclusion: \
-Player A should choose card 2.
-It gives the highest expected value of 0.518 per game. \
-While choosing card 1 offers the highest win probability (70.9%), it only yields an expected value of 0.294. \
+The player A should choose card 2.
+It gives the highest expected value of payoff equal to 0.518 per game. \
+While choosing card 1 offers the highest win probability (70.9%), it only yields an expected value of payoff equal to 0.294. \
 Card 2 provides a better balance of win probability (63.4%) and higher payoff when winning. \
-As card values increase, both expected values and win probabilities decrease steadily. \
+As card numbers increase, both expected values of payoff and win probabilities decrease steadily. \
 
 Player A now has a significant advantage.
 
