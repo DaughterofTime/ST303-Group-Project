@@ -9,15 +9,13 @@ output: pdf_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+#Q4# \
+##(a)
+First, we create a function that models one game \
+Build deck with numbers 1-8 (with four numbers repeated) \
+Randomly deals 4 cards to each player \
+Determines winner based on who has lowest sum \
 ```{r}
-```{r}
-```{r}
-#Q4#
-#(a)
-# First, we create a function that models one game
-# Build deck with numbers 1-8 (with four numbers repeated)
-# Randomly deals 4 cards to each player
-# Determines winner based on who has lowest sum
 sim_game <- function() {
   nums <- 1:8
   repeat_nums <- sample(nums, size=4, replace = FALSE)
@@ -70,15 +68,17 @@ avg_p1 <- mean(all_results[,1])
 avg_p2 <- mean(all_results[,2])
 cat("\nPlayer 1 expected value:", round(avg_p1, 4))
 cat("\nPlayer 2 expected value:", round(avg_p2, 4))
+```
 
-#Conclusion:
-#The payoff distributions for both players are mirror images of each other.
-#The most common outcomes are -1, 0, 1, and 2, with less frequent outcomes at -3, -2, 3, and 4.
-#The expected values (Player 1: -0.0077, Player 2: 0.0077) are essentially zero.
-#The game appears to be fair, with neither player having a significant advantage.
-#Ties (payoff of 0) occur frequently, as shown by the peak at 0 in both histograms.
+Conclusion: \
+The payoff distributions for both players are mirror images of each other. \
+The most common outcomes are -1, 0, 1, and 2, with less frequent outcomes at -3, -2, 3, and 4. \
+The expected values (Player 1: -0.0077, Player 2: 0.0077) are essentially zero. \
+The game appears to be fair, with neither player having a significant advantage. \
+Ties (payoff of 0) occur frequently, as shown by the peak at 0 in both histograms. \
 
-# Part (b) 
+##Q4(b) 
+```{r}
 # Create new function where Player 1 always gets their chosen card
 sim_game_modified <- function(chosen) {
   nums <- 1:8
@@ -140,15 +140,14 @@ best <- which.max(choice_results[,1])
 cat("\n\nBest choice for Player 1: Card", best)
 cat("\nThis gives expected value of", round(choice_results[best,1], 4), "per game")
 cat("\nThe fair game had expected value around 0, so this is definitely better")
+```
 
-#Conclusion
-#Player A should choose card 2
-#It gives the highest expected value of 0.518 per game
-#While choosing card 1 offers the highest win probability (70.9%), it only yields an expected value of 0.294. 
-#Card 2 provides a better balance of win probability (63.4%) and higher payoff when winning
-#As card values increase, both expected values and win probabilities decrease steadily. 
-#Player A now has a significant advantage
-```
-```
-```
+Conclusion: \
+Player A should choose card 2.
+It gives the highest expected value of 0.518 per game. \
+While choosing card 1 offers the highest win probability (70.9%), it only yields an expected value of 0.294. \
+Card 2 provides a better balance of win probability (63.4%) and higher payoff when winning. \
+As card values increase, both expected values and win probabilities decrease steadily. \
+
+Player A now has a significant advantage.
 
