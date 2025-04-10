@@ -181,15 +181,7 @@ for (t in grid_t){
 ```
 
 
-#### Stratified Sampling + Control Variates Method
-$$
-X=[(\sin(\frac{\pi}{2}\frac{U_j + j - 1}{n}))^{t} + (\cos(\frac{\pi}{2}\frac{U_j + j - 1}{n}))^t]\frac{\pi}{2}\\
-\tilde{X}=[(\frac{\pi}{2}\frac{U_j + j - 1}{n}-\frac{\pi}{2}\frac{(\frac{U_j+j-1}{n})^{3}}{6})^{t} + (1-\frac{(\frac{\pi}{2}\frac{U_j+j-1}{n})^{2}}{2})^t]\frac{\pi}{2}\\
-Y=\tilde{X}-\mathbb{E}\left(\tilde{X}\right)
-$$
-Calculate the $\text{Cov}(X,Y)$ and $\text{Var}(Y)$ with the samples to determine $c^{\star}$, $c^{\star}=-\frac{\text{Cov}(X,Y)}{\text{Var}(Y)}$. \
-Approximate $\theta$ with the mean of $X+c^{\star}Y$ and standard errors with the standard errors of $X+c^{\star}Y$.
-  
+#### Stratified Sampling + Control Variates
 ```{r include=FALSE}
 EstIntegral_cvss <- numeric(length(grid_t))
 Diff_cvss <- numeric(length(grid_t))
@@ -209,25 +201,31 @@ for (t in grid_t){
   Diff_cvss[t] <- exact_values_C[t] -  mean(X_cvss)
   SE_cvss[t] <- sd(X_cvss)/sqrt(n)
 }
+
 ```
 
 #### Compare all variance reduction methods
 ```{r}
-# Compare SS + CV with SS
-abs(Diff_ss) - abs(Diff_cvss)
-round((Std_Error_ss - SE_cvss)/Std_Error_ss, digits = 2)
-
-# Compare SS + CV with CV
-abs(Diff_cv3) - abs(Diff_cvss)
-round((SE_cv3 - SE_cvss)/SE_cv3, digits = 2)
-
 # Compare SS + CV with pure Monte Carlo without any variance reduction
-abs(Diff_3) - abs(Diff_cvss)
-round((Std_Error_3 - SE_cvss)/Std_Error_3, digits = 2)
+(abs(Diff_3) - abs(Diff_cvss))[1:10]
+(round((Std_Error_3 - SE_cvss)/Std_Error_3, digits = 2))[1:10]
 
 # Compare CV with pure Monte Carlo without any variance reduction
-abs(Diff_3) - abs(Diff_cv3)
-round((Std_Error_3 - SE_cv3)/Std_Error_3, digits = 2)
+(abs(Diff_3) - abs(Diff_cv3))[1:10]
+(round((Std_Error_3 - SE_cv3)/Std_Error_3, digits = 2))[1:10]
+```
+
+This table represents the differences between two variance reduction methods (SS+CV, only CV) with Monte Carlo Methods for $t=1,2,...,10$.
+
+```{r}
+compare_df <- data.frame(
+  t = 1:10,
+  diff_SSCV = (abs(Diff_3) - abs(Diff_cvss))[1:10],
+  sd_improved_SSCV = (round((Std_Error_3 - SE_cvss)/Std_Error_3, digits = 2))[1:10],
+  diff_CV = (abs(Diff_3) - abs(Diff_cv3))[1:10],
+  sd_improved_CV = (round((Std_Error_3 - SE_cv3)/Std_Error_3, digits = 2))[1:10]
+)
+compare_df
 ```
 
 ## (b)
@@ -366,4 +364,4 @@ df_1b<-data.frame(
 )
 df_1b
 ```
-Therefore, the antithetic variate reduction can reduce the standard error by 75.8793%, and the difference between estimated mean and the true mean is the smallest. Therefore, the antithetic variate reduction is the best method to improve the accuracy.
+Therefore, the antithetic variate reduction can reduce the variance by 75.8793%, and the difference between estimated mean and the true mean is the smallest. Therefore, the antithetic variate reduction is the best method to improve the accuracy.
