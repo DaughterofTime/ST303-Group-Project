@@ -4,6 +4,7 @@ output:
   pdf_document: default
   html_document: default
 date: "2025-04-07"
+fontsize: 11pt
 ---
 
 ```{r setup, include=FALSE}
@@ -14,7 +15,7 @@ knitr::opts_chunk$set(echo = TRUE)
 ## a)
 ### The true values
 The following diagram shows the exact values of C(t) for t from 1 to 100.
-```{r}
+```{r eval=FALSE, include=FALSE}
 grid_t <- 1:100
 
 exact_formula_C <- function(t){
@@ -64,7 +65,7 @@ $$
 \int_{0}^{\pi/2} {(\sin(x))^{t}+(\cos(x))^{t}}\,dx \overset{ x=\arccos(u)}{=} \int_{0}^{1} {u^{t}[\sin(\arccos(u)]^{-1}+[\sin(\arccos(u)]^{t-1}}\,du  \overset{\mathcal{U}\overset{d}{=}\mathcal{U}(0,1)} {=}\\ \mathbb{E}\left[{u^{t}[\sin(\arccos(u)]^{-1}+[\sin(\arccos(u)]^{t-1}}\right] \overset{MC}{\approx} \sum_{i=1}^{N}[u^{t}[\sin(\arccos(u)]^{-1}+[\sin(\arccos(u)]^{t-1}]
 $$
 ##### Using for loop to investigate the performance of integral across different values of t:
-```{r}
+```{r echo=FALSE}
 set.seed(1)
 EstIntegral_2 <- numeric(length(grid_t))
 Diff_2 <- numeric(length(grid_t))
@@ -90,7 +91,7 @@ $$
 \int_{0}^{\pi/2} {(\sin(x))^{t}+(\cos(x))^{t}}\,dx \overset{x=\frac{\pi}2u}{=} \int_{0}^{1} {[(\sin((\frac{\pi}2u))^{t}+((\cos(\frac{\pi}2u))^{t}]\frac{\pi}2}\,du  \overset{\mathcal{U}\overset{d}{=}\mathcal{U}(0,1)} {=}\\ \mathbb{E}\left[\frac{\pi}2[(\sin((\frac{\pi}2u))^{t}+((\cos(\frac{\pi}2u))^{t}]\right] \overset{MC}{\approx} \sum_{i=1}^{N}\frac{\pi}2[(\sin((\frac{\pi}2u))^{t}+((\cos(\frac{\pi}2u))^{t}]
 $$
 ##### Using for loop to investigate the performance of integral across different values of t:
-```{r}
+```{r echo=TRUE}
 set.seed(1)
 EstIntegral_3 <- numeric(length(grid_t))
 Diff_3 <- numeric(length(grid_t))
@@ -111,7 +112,7 @@ EstIntegral_3
 ```
 
 The following table shows the comparison between different methods:
-```{r}
+```{r echo=TRUE}
 df_ts<-data.frame(
   Method=c("Transformation 1","Transformation 2","Transformation 3"),
   Mean=c(mean(sample_1),mean(sample_2),mean(sample_3)),
@@ -179,6 +180,7 @@ print('-----------------------------')
 SE_cv1
 print('-----------------------------')
 Std_Error_3
+mean(Std_Error_3)
 ```
 
 
@@ -212,6 +214,7 @@ print('-----------------------------')
 SE_cv2
 print('-----------------------------')
 Std_Error_3
+mean(SE_cv2)
 ```
 
 #### 2.Stratified Sampling
@@ -223,29 +226,28 @@ j <- 1:n
 sample_1a2 <- ((sin(pi/2*((u+j-1)/n)))^t + (cos(pi/2*((u+j-1)/n)))^t) * pi/2
 
 Mu_ss1 <- mean(sample_1a2)
-Diff_ss1 <- true_integral_1b - Mu_SS
+Diff_ss1 <- EstIntegral_3 - Mu_ss1
 SE_ss1 <- sd(sample_1a2)/sqrt(n)
 
 cbind(Mu_ss1, Diff_ss1, SE_ss1)
-improve_SS <- abs(Mu_SS-EstIntegral_mc)/EstIntegral_mc
+improve_SS <- abs(Mu_ss1-EstIntegral_3)/EstIntegral_3
 ```
 The following table shows the comparison between different variance reduction methods,
 ```{r}
 df_vr1<-data.frame(
   Method=c("Transformation 3","VC_1a","SS_1a"),
   Mean=c(mean(sample_3),mean(EstIntegral_2),mean(EstIntegral_3)),
-  Mean_diff=c(mean(Diff_3),mean(Diff_1),mean(Diff_3)),
-  Standar_error=c(mean(Std_Error_3),mean(Std_Error_1),mean(Std_Error_3))
+  Mean_diff=c(mean(Diff_3),mean(Diff_cv2),mean(Diff_ss1)),
+  Standar_error=c(mean(Std_Error_3),mean(SE_cv2),mean(SE_ss1))
 )
 df_vr1
-
 ```
 
 
 
 ## (b)
 ### Calculate the true value of the double integral
-```{r}
+```{r echo=TRUE}
 set.seed(1)
 f <- function(x, y) {
   r <- sqrt(x^2 + y^2)
@@ -320,8 +322,9 @@ Std_Error_av <- sd((sample1+sample2)/2)/sqrt(n)
 
 rbind(EstIntegral_av, Mean_diff_av, Std_Error_av)
 improve_av <- abs(Std_Error_av-Std_Error_mc)/Std_Error_mc
-cat("The antithetic variate reduction improves the accuarcy by",improve_av)
+improve_av
 ```
+The antithetic variate reduction reduces the standard error by 75.8793%.
 
 #### 2.Stratified Sampling
 Since $1 - U_i \overset{d}{=} U_i$, we can compute
@@ -342,7 +345,7 @@ SE_SS <- sd(sample_1b2)/sqrt(n)
 
 rbind(Mu_SS, Diff_SS, SE_SS)
 improve_SS <- abs(Mu_SS-EstIntegral_mc)/EstIntegral_mc
-cat("The statified sampling imprved the result by?")
+improve_SS
 ```
 
 The following table shows the comparison between different methods:
@@ -356,4 +359,4 @@ df_1b<-data.frame(
 df_1b
 ```
 
-Therefore, the antithetic variate reduction can improve the accuarcy by 86.47548 %, which is the best.
+Therefore, the antithetic variate reduction can improve the accuarcy by 75.8793%, which is the best.
