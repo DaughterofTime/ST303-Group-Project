@@ -30,14 +30,15 @@ lambda <- groups$Var3
 alpha <- groups$Var4
 ```
 
-
 ```{r include=FALSE}
+# Calculate the theoretical mean and variance for each set of parameters using the formula from part (b)
 theoretical_mean <- lambda - alpha*nu/(2*(m - 1))
 theoretical_var <- alpha^2/(2*m - 3) * (1 + nu^2/(4*(m - 1)^2))
 ```
 
 
 ```{r include=FALSE}
+# Create a dataframe summarising all information about the future simulated dataset
 Q2_summary <- data.frame(m, nu, lambda, alpha, 
                          theoretical_mean, theoretical_var)
 Q2_summary
@@ -72,19 +73,18 @@ $$
 f(x) \propto \left[ 1 + (\frac{x - \lambda}{\alpha})\right]^{-m} e^{-\nu\ arctan(\frac{x - \lambda}{\alpha})}
 $$
 
-**Envelope function 4** - after writing it down, we noticed that this is essentially a Cauchy distribution: \
+**Envelope function 4** - after writing it down, we noticed that this is essentially a Cauchy distribution \
 $$
-g(y) \propto (1+(\frac{y-\lambda}{\alpha})^{2})^{-1}, y=\frac{\nu \alpha}{2(1-m)}+\lambda
+g(y) \propto (1+(\frac{y-\lambda}{\alpha})^{2})^{-1}
 $$
 **Envelope function 5**
-Inverse transformation algorithm can not be used. Thus, think of forcing it into t-distribution.
 $$
-\text{t-distribution: }f(y) \propto (1+\frac{y^{2}}{k})^{-\frac{k+1}{2}}\\
-g(y) \propto (1+(\frac{y-\lambda}{\alpha})^{2})^{-m}, \text{let } m=\frac{k+1}{2},k=2m-1\\
-\text{Then } g(y) \propto (1+\frac{z^{2}}{k})^{-\frac{k+1}{2}}, z=\frac{\sqrt{k}(y-\lambda)}{\alpha},y=z\frac{\alpha}{\sqrt{k}}+\lambda.\\
-\text{To conclude, we use: } Y=z\frac{\alpha}{\sqrt{k}}+\lambda, \text{where z is generated from t-distribution with degree of freedom=k=2m-1.}
+g(y) \propto (1+(\frac{y-\lambda}{\alpha})^{2})^{-m}
 $$
-
+By setting $m = \frac{k+1}{2}$ and $z = \frac{\sqrt{k}(y - \lambda)}{\alpha}$, we transform it to a form similar to a t-distribution: \
+$$
+g(y) \propto (1+\frac{z^{2}}{k})^{-\frac{k+1}{2}}
+$$
 
 #### Codes for Envelope function 1 (uniform)
 ```{r include=FALSE}
@@ -196,7 +196,7 @@ $$
 F^{-1}(U) = sin^{-1}(2U - 1)
 $$
 
-```{r}
+```{r include=FALSE}
 # Generate Y
 n <- 10^5
 U <- runif(n)
@@ -205,7 +205,7 @@ Y <- asin(2*U-1)
 sd(Y)/sqrt(n)
 ```
 
-```{r}
+```{r include=FALSE}
 # Control variate method
 Y_prime <- 1/2 - U
 c <- -12*cov(Y, Y_prime)
@@ -213,7 +213,7 @@ sample <- Y + c*Y_prime
 sd(sample)/sqrt(n)
 ```
 
-```{r}
+```{r include=FALSE}
 # Generate the sample using AR
 ptm <- proc.time()
 U <- runif(n)
@@ -232,7 +232,7 @@ sim_envelope_3 <- (proc.time()- ptm)[3]
 plot(density(sample_envelope_3[[1]]), type = 'l')
 ```
 
-```{r}
+```{r include=FALSE}
 # Produce X, and check mean and variance
 X_envelope_3 <- lapply(1:length(nu), function(i) tan(sample_envelope_3[[i]]) * alpha[i] + lambda[i])
 
@@ -240,20 +240,19 @@ envelop_3_empirical_mean <- unlist(lapply(1:length(nu), function(i) mean(X_envel
 envelop_3_empirical_var <- unlist(lapply(1:length(nu), function(i) var(X_envelope_3[[i]])))
 ```
 
-```{r}
+```{r include=FALSE}
 # empirical rate of acceptance
 envelope_3_empirical_acceptance <- unlist(lapply(1:length(nu), function(i) length(sample_envelope_3[[i]])/10^5))
 ```
 
-```{r}
+```{r include=FALSE}
 # update Q2_summary
 Q2_summary <- Q2_summary %>% 
   mutate(envelop_3_empirical_mean, envelop_3_empirical_var, envelope_3_empirical_acceptance)
 Q2_summary
 ```
 
-### Without transformation
-#### Envelope function 4 (Cauchy)
+#### Codes for Envelope function 4 (Cauchy)
 $$
 g(y) \propto (1+(\frac{y-\lambda}{\alpha})^{2})^{-1}
 $$
@@ -262,13 +261,13 @@ $$
 F^{-1}(U) = \alpha\times  tan(\pi U - \frac{\pi}{2}) + \lambda
 $$
 
-```{r}
+```{r include=FALSE}
 # Generate Y
 n <- 10^5
 Y <- lapply(1:length(nu), function(i) alpha[i] * tan(pi*runif(n) - pi/2) + lambda[i])
 ```
 
-```{r}
+```{r include=FALSE}
 # Generate the sample using AR
 ptm <- proc.time()
 U <- runif(n)
@@ -291,7 +290,7 @@ sim_envelope_4 <- (proc.time()- ptm)[3]
 plot(density(sample_envelope_4[[1]]), type = 'l')
 ```
 
-```{r}
+```{r include=FALSE}
 # Produce X, and check mean and variance
 X_envelope_4 <- sample_envelope_4
 
@@ -299,12 +298,12 @@ envelop_4_empirical_mean <- unlist(lapply(1:length(nu), function(i) mean(X_envel
 envelop_4_empirical_var <- unlist(lapply(1:length(nu), function(i) var(X_envelope_4[[i]])))
 ```
 
-```{r}
+```{r include=FALSE}
 # empirical rate of acceptance
 envelope_4_empirical_acceptance <- unlist(lapply(1:length(nu), function(i) length(sample_envelope_4[[i]])/10^5))
 ```
 
-```{r}
+```{r include=FALSE}
 # update summary_Q2
 Q2_summary <- Q2_summary %>% 
   mutate(envelop_4_empirical_mean, envelop_4_empirical_var, envelope_4_empirical_acceptance)
@@ -313,8 +312,20 @@ colnames(Q2_summary)
 ```
 
 
-#### Envelope function 5 (t distribution)
-```{r}
+#### Codes for Envelope function 5 (t distribution)
+Our envelope function is \
+$$
+g(y) \propto (1+(\frac{y-\lambda}{\alpha})^{2})^{-m}
+$$
+We found it hard to find the exact expression of a constant that allows it to integrate to one (i.e. make it a PDF). \
+We solved this problem by getting some inspirations from the PDF of t-distribution, i.e. $f(y) \propto (1+\frac{y^{2}}{k})^{-\frac{k+1}{2}}$. We transformed $g(y)$ to the following t-distribution form by setting $m = \frac{k+1}{2}$ and $z = \frac{\sqrt{k}(y - \lambda)}{\alpha}$: \
+$$
+g(y) \propto (1+\frac{z^{2}}{k})^{-\frac{k+1}{2}}
+$$
+As a result, we are able to simulate $Y$ indirectly by \
+Step 1: Simulate a $Z$ from the built-in t-distribution function `rt` \
+Step 2: Transform $Z$ to $Y$ by using $Y = Z \frac{\alpha}{\sqrt{k}} + \lambda$ \
+```{r include=FALSE}
 # Generate Y
 n <- 10^5
 k <- 2*m - 1
@@ -324,7 +335,7 @@ Y <- lapply(1:length(nu), function(i){
 })
 ```
 
-```{r}
+```{r include=FALSE}
 # Generate the sample using AR
 ptm <- proc.time()
 U <- runif(n)
@@ -342,7 +353,7 @@ sim_envelope_5 <- (proc.time()- ptm)[3]
 plot(density(sample_envelope_5[[1]]), type = 'l')
 ```
 
-```{r}
+```{r include=FALSE}
 # Check mean and variance
 X_envelope_5 <- sample_envelope_5
 
@@ -350,24 +361,17 @@ envelop_5_empirical_mean <- unlist(lapply(1:length(nu), function(i) mean(X_envel
 envelop_5_empirical_var <- unlist(lapply(1:length(nu), function(i) var(X_envelope_5[[i]])))
 ```
 
-
-```{r}
+```{r include=FALSE}
 # empirical rate of acceptance
 envelope_5_empirical_acceptance <- unlist(lapply(1:length(nu), function(i) length(sample_envelope_5[[i]])/10^5))
 ```
 
-```{r}
+```{r include=FALSE}
 # update summary_Q2
 Q2_summary <- Q2_summary %>% 
   mutate(envelop_5_empirical_mean, envelop_5_empirical_var, envelope_5_empirical_acceptance)
 ```
 
-
-
-### Export summary_Q2
-```{r}
-#write.csv(Q2_summary, 'Q2_summary_10_param.csv', row.names = F)
-```
 
 ### Pick the best envelope function
 ### Check the rate of acceptance
