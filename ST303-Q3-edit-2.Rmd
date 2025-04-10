@@ -202,6 +202,19 @@ We used a single “average of future payoffs” or just “the next time step�
 The more accurate method in continuous models is to do a regression across all paths’ next‐step (or multiple‐step) payoffs on the underlying Rt.
 
 #### (2)
+In real-world financial markets, the valuation of options typically incorporates a **positive risk-free interest rate** \( r > 0 \), which introduces a discounting factor \( e^{-rt} \) into the pricing model. This affects the **expected present value** of future payoffs, and has direct consequences for the early exercise behavior in Bermuda options.
+
+Under discounting, the value of the Bermuda option at any exercisable time \( t_i \) is given by:
+
+\[
+V_i = \max\left( (R_{t_i} - K)^+, \ e^{-r \Delta t} \cdot \mathbb{E}[V_{i+1} \mid \mathcal{F}_{t_i}] \right)
+\]
+
+Here, \( \Delta t \) is the time between exercise opportunities, and \( \mathcal{F}_{t_i} \) denotes the information available at time \( t_i \). The exponential discounting term \( e^{-r \Delta t} \) reduces the value of waiting, thereby making **early exercise more attractive** in some scenarios.
+
+This dynamic alters the option holder’s optimal stopping strategy. Instead of always deferring exercise in hopes of higher future payoffs, the holder may choose to exercise earlier to avoid the loss in present value due to discounting. Consequently, the **Bermuda option becomes strictly more valuable than the European option**, which only allows exercise at maturity.
+
+In summary, introducing a positive discount rate \( r > 0 \) changes the valuation structure of the Bermuda option by lowering the continuation value through discounting. This increases the importance of early exercise opportunities and typically results in a higher option price compared to the no-discounting scenario.
 
 #### (3) 
 $$
