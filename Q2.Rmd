@@ -43,41 +43,40 @@ Q2_summary <- data.frame(m, nu, lambda, alpha,
 Q2_summary
 ```
 
-<<<<<<< Updated upstream
-=======
 
->>>>>>> Stashed changes
-### With transformation
+With transformation \
 $$
 y = \tan^{-1}(\frac{x - \lambda}{\alpha}), y \in [-\frac{\pi}{2}, \frac{\pi}{2}]
 $$
-We get
+We get \
 $$
 f(y) \propto (\cos(y))^{2m}e^{-\nu y}
 $$
-We have tried the following five envelop functions. We used transformation for the first three envelop functions, and no transformation for the last two envolope functions.
-Envelope function 1 (uniform distribution)
+and we are able to derive three envelop functions from that: \
+**Envelope function 1** - this is essentially a uniform distribution \
 $$
-f(y) \propto (\cos(y))^{2m}e^{-\nu y}\\
-y = \tan^{-1}(\frac{x - \lambda}{\alpha}), y \in [-\frac{\pi}{2}, \frac{\pi}{2}]\\
-g(y)=\frac{1}{b-a}=\frac{1}{\frac{\pi}{2}-(-\frac{\pi}{2})}=\frac{1}{\pi}, Y \sim Unif[-\frac{\pi}{2}, \frac{\pi}{2}]
+g(y)=\frac{1}{\pi}
 $$
 
-Envelope function 2
+**Envelope function 2** \
 $$
-g(y)\propto e^{-\nu y},
-y=-\frac{1}{2}\log[u(e^{-\frac{\pi}{2}\nu}-e^{\frac{\pi}{2}\nu})+e^{\frac{\pi}{2}\nu}]
+g(y)\propto e^{-\nu y}
 $$
-Envelope function 3
+**Envelope function 3** \
 $$
-g(y)\propto\frac{1}{2}\cos(y), y=\arcsin(-\frac{\nu}{2m-1})
+g(y)\propto\frac{1}{2}\cos(y)
 $$
-Envelope function 4 - Cauchy distribution (without transformation)
+
+We can derive two more envelope functions from the original form of the target function, i.e.
 $$
-f(y) \propto (1+(\frac{y-\lambda}{\alpha})^{2})^{-m}e^{-\nu\arctan(\frac{y-\lambda}{\alpha})}\\
+f(x) \propto \left[ 1 + (\frac{x - \lambda}{\alpha})\right]^{-m} e^{-\nu\ arctan(\frac{x - \lambda}{\alpha})}
+$$
+
+**Envelope function 4** - after writing it down, we noticed that this is essentially a Cauchy distribution: \
+$$
 g(y) \propto (1+(\frac{y-\lambda}{\alpha})^{2})^{-1}, y=\frac{\nu \alpha}{2(1-m)}+\lambda
 $$
-Envelope function 5
+**Envelope function 5**
 Inverse transformation algorithm can not be used. Thus, think of forcing it into t-distribution.
 $$
 \text{t-distribution: }f(y) \propto (1+\frac{y^{2}}{k})^{-\frac{k+1}{2}}\\
@@ -86,13 +85,15 @@ g(y) \propto (1+(\frac{y-\lambda}{\alpha})^{2})^{-m}, \text{let } m=\frac{k+1}{2
 \text{To conclude, we use: } Y=z\frac{\alpha}{\sqrt{k}}+\lambda, \text{where z is generated from t-distribution with degree of freedom=k=2m-1.}
 $$
 
-```{r}
+
+#### Codes for Envelope function 1 (uniform)
+```{r include=FALSE}
 # Generate Y
 n <- 10^5
 Y <- runif(n) * pi - pi/2
 ```
 
-```{r echo=TRUE}
+```{r include=FALSE}
 # Generate the sample using AR
 ptm <- proc.time()
 U <- runif(n)
@@ -110,7 +111,7 @@ sim_envelope_1 <- (proc.time()- ptm)[3]
 plot(density(sample_envelope_1[[1]]), type = 'l')
 ```
 
-```{r}
+```{r include=FALSE}
 # Produce X, and check mean and variance
 X_envelope_1 <- lapply(1:length(nu), function(i){tan(sample_envelope_1[[i]]) * alpha[i] + lambda[i]})
 # X_envelope_1[[1]][1:10]
@@ -121,12 +122,12 @@ envelop_1_empirical_var <- unlist(lapply(1:length(nu), function(i) var(X_envelop
 ```
 
 
-```{r}
+```{r include=FALSE}
 # empirical rate of acceptance
 envelope_1_empirical_acceptance <- unlist(lapply(1:length(nu), function(i) length(sample_envelope_1[[i]])/10^5))
 ```
 
-```{r}
+```{r include=FALSE}
 # add the results to the summary
 library(tidyverse)
 Q2_summary <- Q2_summary %>% 
@@ -135,7 +136,7 @@ Q2_summary <- Q2_summary %>%
 Q2_summary
 ```
 
-#### Envelope function 2 (exponential)
+#### Codes for Envelope function 2 (exponential)
 $$
 g(y) = \frac{\nu e^{-\nu y}}{e^{\frac{\pi}{2}\nu} - e^{-\frac{\pi}{2}\nu}}
 $$
@@ -185,7 +186,7 @@ $$
 ```
 
 
-#### Envelope function 3 (cosine)
+#### Codes for Envelope function 3 (cosine)
 $$
 g(y) = \frac{1}{2}cos(y)
 $$
@@ -211,7 +212,6 @@ c <- -12*cov(Y, Y_prime)
 sample <- Y + c*Y_prime
 sd(sample)/sqrt(n)
 ```
-
 
 ```{r}
 # Generate the sample using AR
@@ -254,6 +254,13 @@ Q2_summary
 
 ### Without transformation
 #### Envelope function 4 (Cauchy)
+$$
+g(y) \propto (1+(\frac{y-\lambda}{\alpha})^{2})^{-1}
+$$
+With inverse transform algorithm, we get
+$$
+F^{-1}(U) = \alpha\times  tan(\pi U - \frac{\pi}{2}) + \lambda
+$$
 
 ```{r}
 # Generate Y

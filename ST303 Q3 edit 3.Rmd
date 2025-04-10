@@ -190,19 +190,11 @@ cat("Extra cost of Bermuda over European =", diff_price, "\n")
 
 ### (e)
 
-```{r}
-# 1. No proper modeling of expected future values. (we just take average: mean())
-# 2. Discounting factor = 0 here, there is little incentive to exercise early. (if r>0, price = e^-rt*E(Vi+1))
-# 3. Limited Number of Paths (Monte Carlo Error)
-# 4. Y[i+1] <- max(Y[i] + delta*dt+ 2*sqrt(Y[i])*dW, 0)
-# 5. Variance reduction: AV, CV, conditioning, stratify sampling, importance sampling
-```
-
-#### (1)
+#### (1) No proper modeling of expected future values:
 We used a single “average of future payoffs” or just “the next time step’s payoff,” which might be a coarse approximation.
 The more accurate method in continuous models is to do a regression across all paths’ next‐step (or multiple‐step) payoffs on the underlying Rt.
 
-#### (2)
+#### (2) Assumption of the discouting factor is not realistic:
 In real-world financial markets, option pricing typically incorporates a positive risk-free interest rate $r > 0$, leading to exponential discounts of future payoffs. 
 
 When discounting is present, the option value at an exercise time $t_i$ is given by:
@@ -215,11 +207,12 @@ The second term represents the discounted expected continuation value, where $\D
 
 In contrast to a zero-interest-rate setting where the continuation value is not discounted, a positive $r$ reduces the present value of waiting. This provides a stronger incentive for early exercise and typically increases the premium of the Bermuda option over its European counterpart.
 
-#### (3)
+#### (3) Limited number of paths:
 If the number of paths is relatively small (e.g. we use M=100 in this case), the variance of the estimator might be high.
 Checking for confidence intervals or repeating with a bigger M can highlight whether results have converged.
 
-#### (4) 
+#### (4) Issues arising from the direct simulation of Rt:
+
 $$
     R_t \to 0 \quad \Rightarrow \quad Y_t = R_t^2 \to 0
 $$ 
