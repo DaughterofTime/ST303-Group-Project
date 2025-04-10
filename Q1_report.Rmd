@@ -14,7 +14,7 @@ knitr::opts_chunk$set(echo = TRUE)
 # Question 1
 ## a)
 ### The true values
-The following diagram shows the exact values of C(t) for t from 1 to 100.
+We compute the exact values of C(t) for t values from 1 to 100.
 ```{r include=FALSE}
 grid_t <- 1:100
 
@@ -26,6 +26,7 @@ exact_values_C <- exact_formula_C(grid_t)
 ```
 
 ### Monte Carlo Methods
+We take n=10^6.
 ```{r include=FALSE}
 n <- 10^6
 ```
@@ -130,28 +131,20 @@ $$
 $$
 We want to find a random variable $Y$ with mean $0$ and a good constant $c$ such that $\mathbb{E}(X+cY) \approx \theta$.
 
-We consider the Taylor polynomial of $g$ of degree 2 at 0:
 $$
-    T_1(u) = g(0) + g^{'}(0)(u-0) + \frac{1}{2}g^{''}(0)(u-0)^2 + O(u^3) = \frac{\pi}2 -\frac{\pi^{3}t}{16}u^{2},\\
-     \quad\text{where}\quad g^{'}(u) =  \frac{\pi^2}{4}[t(\sin(\frac{\pi}{2}u))^{t-1}\cos(\frac{\pi}{2}u))-t(\cos(\frac{\pi}{2}u))^{t-1}\sin(\frac{\pi}{2}u))],\quad g^{'}(0) =0\\
-    \quad g^{''}(u) =\frac{\pi^4}{4}[t(t-1)\frac{\pi}{2}\sin(\frac{\pi}{2}u))^{t-2}\cos^{2}(\frac{\pi}{2})-\frac{\pi}{2}t\sin(\frac{\pi}{2}u))^{t}+t(t-1)\frac{\pi}{2}\cos(\frac{\pi}{2}u))^{t-2}\sin^{2}(\frac{\pi}{2})-\frac{\pi}{2}t\cos(\frac{\pi}{2}u))^{t}],\\
-    \quad g^{''}(0) =-\frac{\pi^3}{8}t.
+\tilde{X}=(\frac{\pi}{2}u-\frac{(\frac{\pi}{2}u)^{3}}{6})^{t}+(1-\frac{(\frac{\pi}{2}u)^{2}}{2})^{t} \\
+Y=\tilde{X}-\mathbb{E}\left(\tilde{X}\right)
 $$
-We take $T_1 = \frac{\pi}2 -\frac{\pi^{3}t}{16}u^{2}$.  At this point, we define $Y$ in terms of $T_1$, but we need to have mean $0$. Therefore, we compute:
-$$
-    \mathbb{E}(T_1)=\frac{\pi}2 -\frac{\pi^{3}t}{16}\mathbb{E}(u^{2})=\frac{\pi}2 -\frac{\pi^{3}}{16}t*\frac{1}{3}=\frac{\pi}2 -\frac{\pi^{3}}{48}t,
-$$
-then we choose $Y=T_1-(\frac{\pi}2 -\frac{\pi^{3}}{48}t)=\frac{\pi}2 -\frac{\pi^{3}t}{16}u^{2} -\frac{\pi}2 + \frac{\pi^{3}}{48}t = \frac{\pi^3}{48}t-(\frac{\pi^3}{16}t)u^{2}$. We estimate $\theta$ via the following algorithm:
 
 \begin{itemize}
   \item Simulate $U_1, U_2, \ldots, U_n \overset{d}{\sim} \mathcal{U}(0,1)$.
-  \item Simulate $X$: $g(u_1), g(u_2), \ldots, g(u_n)$.
-  \item Simulate $Y$: $\frac{\pi^3}{48}t-(\frac{\pi^3}{16}t)u_1^{2}, \frac{\pi^3}{48}t-(\frac{\pi^3}{16}t)u_2^{2}, \ldots, \frac{\pi^3}{48}t-(\frac{\pi^3}{16}t)u_n^{2}$.
-  \item Calculate the $\text{Cov}(X,Y)$ and $\text{Var}(Y)$ with the samples to determine $c^{\star}$.
+  \item Simulate $\tilde{X}=(\frac{\pi}{2}u-\frac{(\frac{\pi}{2}u)^{3}}{6})^{t}+(1-\frac{(\frac{\pi}{2}u)^{2}}{2})^{t}$, where $(\frac{\pi}{2}u-\frac{(\frac{\pi}{2}u)^{3}}{6})$ is the Taylor expansion of $\sin(\frac{\pi}{2}u)$, and $(1-\frac{(\frac{\pi}{2}u)^{2}}{2})$ is the Taylor expansion of $\cos(\frac{\pi}{2}u)$.
+  \item Simulate $Y=\tilde{X}-\mathbb{E}\left(\tilde{X}\right)$.
+  \item Calculate the $\text{Cov}(X,Y)$ and $\text{Var}(Y)$ with the samples to determine $c^{\star}$, $c^{\star}=-\frac{\text{Cov}(X,Y)}{\text{Var}(Y)}$
   \item Approximate $\theta$ with the mean of $X+c^{\star}Y$ and standard errors with the standard errors of $X+c^{\star}Y$.
 \end{itemize}
 
-###### CV3
+###### Control Variate Method
 ```{r include=FALSE}
 set.seed(1)
 EstIntegral_cv3 <- numeric(length(grid_t))
@@ -360,7 +353,6 @@ rbind(Mu_avss, Diff_avss, SE_avss)
 improve_SS <- (EstIntegral_mc - Mu_avss)/EstIntegral_mc
 improve_SS
 ```
-
 
 The following table shows the comparison between different methods:
 ```{r echo=FALSE}
