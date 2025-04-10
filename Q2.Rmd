@@ -79,10 +79,17 @@ g(y)\propto\frac{1}{2}\cos(y), y=\arcsin(-\frac{\nu}{2m-1})
 $$
 Envelope function 4 - Cauchy distribution (without transformation)
 $$
-f(y) \propto (1+(\frac{y-\lambda}{\alpha})^{2})^{-m}e^{-\nu\arctan(\frac{x-\lambda}{\alpha})}\\
+f(y) \propto (1+(\frac{y-\lambda}{\alpha})^{2})^{-m}e^{-\nu\arctan(\frac{y-\lambda}{\alpha})}\\
 g(y) \propto (1+(\frac{y-\lambda}{\alpha})^{2})^{-1}, y=\frac{\nu \alpha}{2(1-m)}+\lambda
 $$
 Envelope function 5
+Inverse transformation algorithm can not be used. Thus, think of forcing it into t-distribution.
+$$
+\text{t-distribution: }f(y) \propto (1+\frac{y^{2}}{k})^{-\frac{k+1}{2}}\\
+g(y) \propto (1+(\frac{y-\lambda}{\alpha})^{2})^{-m}, \text{let } m=\frac{k+1}{2},k=2m-1\\
+\text{Then } g(y) \propto (1+\frac{z^{2}}{k})^{-\frac{k+1}{2}}, z=\frac{\sqrt{k}(y-\lambda)}{\alpha},y=z\frac{\alpha}{\sqrt{k}}+\lambda.\\
+\text{To conclude, we use: } Y=z\frac{\alpha}{\sqrt{k}}+\lambda, \text{where z is generated from t-distribution with degree of freedom=k=2m-1.}
+$$
 
 ```{r}
 # Generate Y

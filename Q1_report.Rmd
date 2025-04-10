@@ -36,7 +36,7 @@ n <- 10^6
 For transformation 1, we use $u=sinx$, then $x=arcsin(u)$. When $x=0$, then $u=0$, and when $x=\pi/2$, then $u=1$.
 We compute:
 $$
-    \int_{0}^{\pi/2} {(\sin(x))^{t}+(\cos(x))^{t}}\,dx \overset{x=\arcsin(u)}{=} \int_{0}^{1} {u^{t}[\cos(\arcsin(u)]^{-1}+[\cos(\arcsin(u)]^{t-1}}\,du  \overset{\mathcal{U}\overset{d}{=}\mathcal{U}(0,1)} {=}\\ \mathbb{E}\left[{u^{t}[\cos(\arcsin(u)]^{-1}+[\cos(\arcsin(u)]^{t-1}}\right] \overset{MC}{\approx} \sum_{i=1}^{N}[u^{t}[\cos(\arcsin(u)]^{-1}+[\cos(\arcsin(u)]^{t-1}]
+\int_{0}^{\pi/2} {(\sin(x))^{t}+(\cos(x))^{t}}\,dx \overset{x=\arcsin(u)}{=} \int_{0}^{1} {u^{t}[\cos(\arcsin(u)]^{-1}+[\cos(\arcsin(u)]^{t-1}}\,du  \overset{\mathcal{U}\overset{d}{=}\mathcal{U}(0,1)} {=}\\ \mathbb{E}\left[{u^{t}[\cos(\arcsin(u)]^{-1}+[\cos(\arcsin(u)]^{t-1}}\right] \overset{MC}{\approx} \sum_{i=1}^{N}[u^{t}[\cos(\arcsin(u)]^{-1}+[\cos(\arcsin(u)]^{t-1}]
 $$
 
 ##### Using for loop to investigate the performance of integral across different values of t:
