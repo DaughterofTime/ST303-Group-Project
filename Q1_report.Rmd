@@ -169,7 +169,7 @@ for (t in grid_t){
   c <- -cov(X,Y)/var(Y)
   X_cv1 <- X+c*Y
   EstIntegral_cv1[t] <- mean(X_cv1)
-  Diff_cv1[t] <- EstIntegral_3[t] -  mean(X_cv1)
+  Diff_cv1[t] <- exact_values_C[t] -  mean(X_cv1)
   SE_cv1[t] <- sd(X_cv1)/sqrt(n)
 }
 
@@ -198,7 +198,7 @@ for (t in grid_t){
   theta_hat <- X+c*Y_2
   EstIntegral_cv2[t] <- mean(theta_hat)
   SE_cv2[t] <- sd(theta_hat)/sqrt(n)
-  Diff_cv2[t] <- EstIntegral_3[t] - mean(theta_hat)
+  Diff_cv2[t] <- exact_values_C[t] - mean(theta_hat)
 }
 
 
@@ -234,33 +234,101 @@ for (t in grid_t){
   c <- -cov(X,Y)/var(Y)
   X_cv3 <- X+c*Y
   EstIntegral_cv3[t] <- mean(X_cv3)
-  Diff_cv3[t] <- EstIntegral_3[t] -  mean(X_cv3)
+  Diff_cv3[t] <- exact_values_C[t] -  mean(X_cv3)
   SE_cv3[t] <- sd(X_cv3)/sqrt(n)
 }
 
-Std_Error_3
-print('----------------')
-SE_cv3
 ```
 
-
-
-
-#### Add Stratified Sampling
 ```{r}
-set.seed(1)
-n <- 10^6
-u <- runif(n)
-j <- 1:n
-sample_1a2 <- ((sin(pi/2*((u+j-1)/n)))^t + (cos(pi/2*((u+j-1)/n)))^t) * pi/2
-
-Mu_ss1 <- mean(sample_1a2)
-Diff_ss1 <- EstIntegral_3 - Mu_ss1
-SE_ss1 <- sd(sample_1a2)/sqrt(n)
-
-cbind(Mu_ss1, Diff_ss1, SE_ss1)
-improve_SS <- abs(Mu_ss1-EstIntegral_3)/EstIntegral_3
+round((Std_Error_3 - SE_cv3)/Std_Error_3 * 100, digits = 2)
 ```
+```{r}
+Diff_cv3
+```
+
+#### Stratified Sampling
+```{r}
+# SS
+set.seed(1)
+
+#X_ss <- matrix(numeric(n*length(grid_t)), nrow = length(grid_t))
+EstIntegral_ss <- numeric(length(grid_t))
+Diff_ss <- numeric(length(grid_t))
+Std_Error_ss <- numeric(length(grid_t))
+
+for (t in grid_t){
+  j <- 1:n  # split the integral [0, 1] into 10^5 smaller intervals
+  u <- runif(n)
+  
+  sample_ss <- (sin(pi/2*(u + j - 1)/n)^t + cos(pi/2*((u + j - 1)/n))^t) * pi/2
+  #X_ss[t, ] <- sample_ss
+  EstIntegral_ss[t] <- mean(sample_ss)
+  Diff_ss[t] <- exact_formula_C(t) - EstIntegral_ss[t]
+  Std_Error_ss[t] <- sd(sample_ss)/sqrt(n)
+}
+```
+
+
+#### Stratified Sampling + Control Variates
+```{r}
+## SS + CV
+EstIntegral_cvss <- numeric(length(grid_t))
+Diff_cvss <- numeric(length(grid_t))
+SE_cvss <- numeric(length(grid_t))
+
+for (t in grid_t){
+  j <- 1:n  # split the integral [0, 1] into 10^5 smaller intervals
+  u <- runif(n)
+
+  X <- (sin(pi/2*(u + j - 1)/n)^t + cos(pi/2*(u + j - 1)/n)^t) * pi/2
+  X_tilde <- ((pi/2*(u + j - 1)/n - (pi/2*(u + j - 1)/n)^3/6)^t + (1 - (pi/2*(u + j - 1)/n)^2/2)^t) * pi/2
+  Y <- X_tilde - mean(X_tilde)
+  
+  c <- -cov(X,Y)/var(Y)
+  X_cvss <- X+c*Y
+  EstIntegral_cvss[t] <- mean(X_cvss)
+  Diff_cvss[t] <- exact_values_C[t] -  mean(X_cvss)
+  SE_cvss[t] <- sd(X_cvss)/sqrt(n)
+}
+
+```
+
+```{r}
+# Compare SS + CV with SS
+abs(Diff_ss) - abs(Diff_cvss)
+round((Std_Error_ss - SE_cvss)/Std_Error_ss, digits = 2)
+
+# Compare SS + CV with CV
+abs(Diff_cv3) - abs(Diff_cvss)
+round((SE_cv3 - SE_cvss)/SE_cv3, digits = 2)
+
+# Compare SS + CV with pure Monte Carlo without any variance reduction
+abs(Diff_3) - abs(Diff_cvss)
+round((Std_Error_3 - SE_cvss)/Std_Error_3, digits = 2)
+
+# Compare CV with pure Monte Carlo without any variance reduction
+abs(Diff_3) - abs(Diff_cv3)
+round((Std_Error_3 - SE_cv3)/Std_Error_3, digits = 2)
+```
+
+
+```{r}
+# set.seed(1)
+# n <- 10^6
+# u <- runif(n)
+# j <- 1:n
+# sample_1a2 <- ((sin(pi/2*((u+j-1)/n)))^t + (cos(pi/2*((u+j-1)/n)))^t) * pi/2
+# 
+# Mu_ss1 <- mean(sample_1a2)
+# Diff_ss1 <- EstIntegral_3 - Mu_ss1
+# SE_ss1 <- sd(sample_1a2)/sqrt(n)
+# 
+# cbind(Mu_ss1, Diff_ss1, SE_ss1)
+# improve_SS <- abs(Mu_ss1-EstIntegral_3)/EstIntegral_3
+```
+
+
 The following table shows the comparison between different variance reduction methods,
 ```{r}
 df_vr1<-data.frame(
