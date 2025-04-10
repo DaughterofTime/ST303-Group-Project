@@ -294,6 +294,7 @@ for (t in grid_t){
 
 ```
 
+#### Compare all variance reduction methods
 ```{r}
 # Compare SS + CV with SS
 abs(Diff_ss) - abs(Diff_cvss)
@@ -364,20 +365,20 @@ true_integral_1b
 
 #### Alternatively, using another package:
 ```{r}
-set.seed(1)
-# install.packages('pracma')
-library(pracma)
-
-f <- function(x, y) {
-  r <- sqrt(x^2 + y^2)
-  ifelse(r == 0, 1, sin(r) / r) 
-}
-
-dblquad(f, -1, 1, -1, 1)
+# set.seed(1)
+# # install.packages('pracma')
+# library(pracma)
+# 
+# f <- function(x, y) {
+#   r <- sqrt(x^2 + y^2)
+#   ifelse(r == 0, 1, sin(r) / r) 
+# }
+# 
+# dblquad(f, -1, 1, -1, 1)
 ```
 
 ### Pure Monte Carlo Methods
-Since the equation os symmetric, we can compute: 
+Since the equation is symmetric, we can compute: 
 $$
     \int_{-1}^{1}\int_{-1}^{1}\frac{\sin(\sqrt{x^{2}+y^{2}})}{\sqrt{x^{2}+y^{2}}}\,dx\,dy{=}4\int_{0}^{1}\int_{0}^{1}\frac{\sin(\sqrt{x^{2}+y^{2}})}{\sqrt{x^{2}+y^{2}}}\,dx\,dy  
     \overset{(X, Y) ind \overset{d}{\sim} \mathcal{U}(0,1) }{=}\\
@@ -418,9 +419,13 @@ Mean_diff_av <- true_integral_1b - EstIntegral_av
 Std_Error_av <- sd((sample1+sample2)/2)/sqrt(n)
 
 rbind(EstIntegral_av, Mean_diff_av, Std_Error_av)
-improve_av <- abs(Std_Error_av-Std_Error_mc)/Std_Error_mc
+```
+
+```{r}
+improve_av <- (Std_Error_mc - Std_Error_av)/Std_Error_mc
 improve_av
 ```
+
 The antithetic variate reduction reduces the standard error by 75.8793%.
 
 #### 2.Stratified Sampling
@@ -432,9 +437,8 @@ where $X_1,\ldots,X_N \overset{d}{\sim} \mathcal{U}(0,1)$, $Y_1,\ldots,Y_N \over
 ```{r}
 set.seed(1)
 n <- 10^5
-u <- runif(n)
 j <- 1:n
-sample_1b2 <- 4 * (sin(sqrt(((u+j-1)/n)^2 + ((u+j-1)/n)^2)))/sqrt(((u+j-1)/n)^2 + ((u+j-1)/n)^2)
+sample_1b2 <- 4 * (sin(sqrt(((x+j-1)/n)^2 + ((y+j-1)/n)^2)))/sqrt(((x+j-1)/n)^2 + ((y+j-1)/n)^2)
 
 Mu_SS <- mean(sample_1b2)
 Diff_SS <- true_integral_1b - Mu_SS
@@ -444,6 +448,23 @@ rbind(Mu_SS, Diff_SS, SE_SS)
 improve_SS <- abs(Mu_SS-EstIntegral_mc)/EstIntegral_mc
 improve_SS
 ```
+
+#### Stratified Sampling + Antithetic variate
+```{r}
+set.seed(1)
+n <- 10^5
+j <- 1:n
+sample_1b2 <- 4 * (sin(sqrt(((x+j-1)/n)^2 + ((y+j-1)/n)^2)))/sqrt(((x+j-1)/n)^2 + ((y+j-1)/n)^2)
+
+Mu_SS <- mean(sample_1b2)
+Diff_SS <- true_integral_1b - Mu_SS
+SE_SS <- sd(sample_1b2)/sqrt(n)
+
+rbind(Mu_SS, Diff_SS, SE_SS)
+improve_SS <- abs(Mu_SS-EstIntegral_mc)/EstIntegral_mc
+improve_SS
+```
+
 
 The following table shows the comparison between different methods:
 ```{r}
