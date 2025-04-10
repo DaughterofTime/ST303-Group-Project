@@ -13,9 +13,9 @@ library(tidyverse)
 library(ggplot2)
 ```
 
-# Question 2
-## a)
-### Generate various values of m, nu, lambda and alpha
+## Question 2 
+### (a), (b) \
+We generate 10 values for each of the parameters $m$, $\nu$, $\lambda$, $\alpha$, based on the conditions on their values specified in the question. They are shuffled so that $10^4 = 10000$ distinct sets of parameters are created. \
 ```{r}
 m_list <- seq(1.6, 10, length.out = 10)
 nu_list <- seq(-5, 5, length.out = 10)
@@ -31,25 +31,22 @@ alpha <- groups$Var4
 ```
 
 
-```{r}
-# m <- 2
-# nu <- -1
-# lambda <- -1
-# alpha <- 1
-```
-
-
-```{r}
+```{r include=FALSE}
 theoretical_mean <- lambda - alpha*nu/(2*(m - 1))
 theoretical_var <- alpha^2/(2*m - 3) * (1 + nu^2/(4*(m - 1)^2))
 ```
 
 
-```{r}
-Q2_summary <- data.frame(m, nu, lambda, alpha, theoretical_mean, theoretical_var)
+```{r include=FALSE}
+Q2_summary <- data.frame(m, nu, lambda, alpha, 
+                         theoretical_mean, theoretical_var)
 Q2_summary
 ```
 
+<<<<<<< Updated upstream
+=======
+
+>>>>>>> Stashed changes
 ### With transformation
 $$
 y = \tan^{-1}(\frac{x - \lambda}{\alpha}), y \in [-\frac{\pi}{2}, \frac{\pi}{2}]
@@ -58,14 +55,14 @@ We get
 $$
 f(y) \propto (\cos(y))^{2m}e^{-\nu y}
 $$
-We have tried the following five envelop functions. We used transformation for the first three envelop functions, and no transformation for the last two envolop functions.
+We have tried the following five envelop functions. We used transformation for the first three envelop functions, and no transformation for the last two envolope functions.
 Envelope function 1 (uniform distribution)
 $$
 f(y) \propto (\cos(y))^{2m}e^{-\nu y}\\
 y = \tan^{-1}(\frac{x - \lambda}{\alpha}), y \in [-\frac{\pi}{2}, \frac{\pi}{2}]\\
 g(y)=\frac{1}{b-a}=\frac{1}{\frac{\pi}{2}-(-\frac{\pi}{2})}=\frac{1}{\pi}, Y \sim Unif[-\frac{\pi}{2}, \frac{\pi}{2}]
-
 $$
+
 Envelope function 2
 $$
 g(y)\propto e^{-\nu y},
@@ -122,6 +119,7 @@ X_envelope_1 <- lapply(1:length(nu), function(i){tan(sample_envelope_1[[i]]) * a
 envelop_1_empirical_mean <- unlist(lapply(1:length(nu), function(i) mean(X_envelope_1[[i]])))
 envelop_1_empirical_var <- unlist(lapply(1:length(nu), function(i) var(X_envelope_1[[i]])))
 ```
+
 
 ```{r}
 # empirical rate of acceptance
@@ -203,7 +201,17 @@ n <- 10^5
 U <- runif(n)
 
 Y <- asin(2*U-1)
+sd(Y)/sqrt(n)
 ```
+
+```{r}
+# Control variate method
+Y_prime <- 1/2 - U
+c <- -12*cov(Y, Y_prime)
+sample <- Y + c*Y_prime
+sd(sample)/sqrt(n)
+```
+
 
 ```{r}
 # Generate the sample using AR
