@@ -247,6 +247,7 @@ result <- integrate(function(y) {
 true_integral_1b <- result$value
 true_integral_1b
 ```
+The true value of this double integral is 3.575761.
 
 ### Pure Monte Carlo Methods
 Since the equation is symmetric, we can compute: 
@@ -292,7 +293,7 @@ Std_Error_av <- sd((sample1+sample2)/2)/sqrt(n)
 rbind(EstIntegral_av, Mean_diff_av, Std_Error_av)
 ```
 
-```{r}
+```{r echo=TRUE}
 improve_av <- (Std_Error_mc - Std_Error_av)/Std_Error_mc
 improve_av
 ```
@@ -318,13 +319,22 @@ SE_SS <- sd(sample_1b2)/sqrt(n)
 rbind(Mu_SS, Diff_SS, SE_SS)
 ```
 
-```{r}
+```{r echo=TRUE}
 improve_SS <- (EstIntegral_mc - Mu_SS)/EstIntegral_mc
 improve_SS
 ```
-
+Stratified sampling can not improve more accuracy than antithetic variate reduction.
 
 #### Stratified Sampling + Antithetic Variate
+We need to compute the mean of following two estimations:
+$$
+h(U)=\frac{4}{N}\sum_{i=1}^{N}\frac{\sin(\sqrt{(\frac{U_i+i-1}{n})^{2} + (\frac{U_j+j-1}{n})^2}}{\sqrt{(\frac{U_i+i-1}{n})^{2} + (\frac{U_j+j-1}{n})^2}},
+$$
+and
+$$
+h(1-U)=\frac{4}{N}\sum_{i=1}^{N}\frac{\sin(\sqrt{(\frac{i-U_i}{n})^{2} + (\frac{j-U_j}{n})^2}}{\sqrt{(\frac{i-U_i}{n})^{2} + (\frac{j-U_j}{n})^2}}
+$$
+
 ```{r include=FALSE}
 set.seed(1)
 n <- 10^5
@@ -343,6 +353,21 @@ rbind(Mu_avss, Diff_avss, SE_avss)
 ```{r}
 improve_SS <- (EstIntegral_mc - Mu_SS)/EstIntegral_mc
 improve_SS
+```
+
+```{r}
+set.seed(1)
+n <- 10^5
+j <- 1:n
+sample_avss_1 <- 4 * (sin(sqrt(((x+j-1)/n)^2 + ((y+j-1)/n)^2)))/sqrt(((x+j-1)/n)^2 + ((y+j-1)/n)^2)
+sample_avss_2 <- 4 * (sin(sqrt((j-x)/n)^2 + (1 - (j-y)/n)^2))/sqrt()
+sample_avss <- (sample_avss_1 + sample_avss_2)/2
+
+Mu_avss <- mean(sample_avss)
+Diff_avss <- true_integral_1b - Mu_avss
+SE_avss <- sd(sample_avss)/sqrt(n)
+
+rbind(Mu_avss, Diff_avss, SE_avss)
 ```
 
 
