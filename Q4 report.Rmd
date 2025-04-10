@@ -2,19 +2,20 @@
 title: "Q4"
 author: "Litong Hou"
 date: "2025-04-10"
-output: pdf_document
+output:
+  word_document: default
+  pdf_document: default
 ---
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
-```
+## Question 4
 
-#Q4# \
-##(a)
+### (a)
+
 First, we create a function that models one game \
 Build deck with numbers 1-8 (with four numbers repeated) \
 Randomly deals 4 cards to each player \
 Determines winner based on who has lowest sum \
+
 ```{r}
 sim_game <- function() {
   nums <- 1:8
@@ -77,7 +78,8 @@ The expected values (Player 1: -0.0077, Player 2: 0.0077) are essentially zero. 
 The game appears to be fair, with neither player having a significant advantage. \
 Ties (payoff of 0) occur frequently, as shown by the peak at 0 in both histograms. \
 
-##Q4(b) 
+### (b) 
+
 ```{r}
 # Create new function where Player 1 always gets their chosen card
 sim_game_modified <- function(chosen) {
