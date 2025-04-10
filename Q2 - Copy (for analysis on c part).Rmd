@@ -168,13 +168,13 @@ Q2_summary_quantiles
 ### Compare two types of quantiles:
 ```{r}
 Q2_summary_quantiles_diff <- Q2_summary_quantiles %>%
-  mutate(`0.05` = `Empirical_5%` - `CLT_5%`,
-         `0.10` = `Empirical_10%` - `CLT_10%`,
-         `0.25` = `Empirical_25%` - `CLT_25%`,
-         `0.50` = `Empirical_25%` - `CLT_25%`,
-         `0.75` = `Empirical_75%` - `CLT_75%`,
-         `0.90` = `Empirical_90%` - `CLT_90%`,
-         `0.95` = `Empirical_95%` - `CLT_95%`) %>%
+  mutate(`0.05` = `CLT_5%` - `Empirical_5%`,
+         `0.10` = `CLT_10%` - `Empirical_10%`,
+         `0.25` = `CLT_25%` - `Empirical_25%`,
+         `0.50` = `CLT_25%` - `Empirical_25%`,
+         `0.75` = `CLT_75%` - `Empirical_75%`,
+         `0.90` = `CLT_90%` - `Empirical_90%`,
+         `0.95` = `CLT_95%` - `Empirical_95%`) %>%
   select(m, nu, lambda, alpha, `0.05`, `0.10`, `0.25`, `0.50`, `0.75`, `0.90`, `0.95`)
 
 Q2_summary_quantiles_diff
@@ -188,23 +188,35 @@ temp <- Q2_summary_quantiles_diff %>%
   filter(!m %in% c(1.6, 2.533)) %>% # Remove the two columns to make plots nicer
   select(m, nu, `0.05`, `0.10`, `0.25`, `0.50`, `0.75`, `0.90`, `0.95`)
 
-df_long <- pivot_longer(
+temp_long <- pivot_longer(
  temp,
  cols = c(`0.05`, `0.10`, `0.25`, `0.50`, `0.75`, `0.90`, `0.95`),
  names_to = 'x',
  values_to = "y"
 )
 
-ggplot(df_long, aes(x = x, y = y, color = factor(m))) +
+ggplot(temp_long, aes(x = x, y = y, color = factor(m))) +
   geom_boxplot() +
-  facet_wrap(~nu) +
+  facet_wrap(~nu, labeller = label_both) +
   theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-  labs(x = "Percents", y = "Empirical Percentile - CLT Percentile", color = "m")
+  labs(x = "Percents", y = "CLT Percentile - Sample Percentile", color = "m", title = 'Difference between Sample Percentiles and CLT Percentiles, holding nu constant') + 
+  scale_x_discrete(labels = paste0(quantile_percents*100, '%'))
 
-ggplot(df_long, aes(x = x, y = y, color = factor(nu))) +
+ggplot(temp_long, aes(x = x, y = y, color = factor(nu))) +
   geom_boxplot() +
-  facet_wrap(~m) +
+  facet_wrap(~m, labeller = label_both) +
   theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-  labs(x = "Percents", y = "Empirical Percentile - CLT Percentile", color = "nu")
+  labs(x = "Percents", y = "CLT Percentile - Sample Percentile", color = "nu", title = 'Difference between Sample Percentiles and CLT Percentiles, holding m constant') +
+  scale_x_discrete(labels = paste0(quantile_percents*100, '%'))
 ```
+
+Conclusions:
+CLT percentiles are lower than the sample percentiles when the percentage is low.
+CLT percentiles are higher than the sample percentiles when the percentage is high.
+Therefore, we can conclude that compared to a normal distribution, our sample distribution has heavier tails on both sides.
+We also notice the following facts:
+- The higher the $m$, the lower the discrepancies between the CLT percentiles and the sample percentiles. Hence, as $m$ gets higher, the sample distribution converges to a normal distribution.
+- The closer $\nu$ is to zero, the lower discrepancies between the CLT percentiles and the sample percentiles. Hence, as $\nu$ gets closer to zero, the sample distribution coverges to a normal distribution.
+
+
 
