@@ -364,4 +364,4 @@ df_1b<-data.frame(
 df_1b
 ```
 
-Therefore, the antithetic variate reduction can improve the accuarcy by 75.8793%, which is the best.
+Therefore, the antithetic variate reduction can improve the accurarcy by 75.8793%, which is the best.
