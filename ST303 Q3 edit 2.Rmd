@@ -243,7 +243,7 @@ Then $\hat{\theta}=X + cY$, calculate $Var(\hat{\theta})$ and compare it to $Var
 ```{r}
 theta_hat = X + c*Y
 cat(var(X), var(theta_hat), "\n",  
-    "Improved by",(var(X)-var(theta_hat))/var(X) * 100, "%.")
+    "Improved by",round((var(X)-var(theta_hat))/var(X) * 100, digits = 2), "%.")
 ```
 
 Other attempts for variance reduction:
