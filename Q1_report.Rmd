@@ -106,8 +106,6 @@ for (t in grid_t){
 }
 
 rbind(mean_diff_3 = mean(Diff_3), SE_3 = mean(Std_Error_3))
-
-EstIntegral_3
 ```
 
 The following table shows the comparison between different methods:
@@ -155,6 +153,7 @@ then we choose $Y=T_1-(\frac{\pi}2 -\frac{\pi^{3}}{48}t)=\frac{\pi}2 -\frac{\pi^
 \end{itemize}
 
 ##### Using for loop to investigate the performance of integral across different values of t:
+###### CV1
 ```{r}
 set.seed(1)
 EstIntegral_cv1 <- numeric(length(grid_t))
@@ -181,7 +180,7 @@ print('-----------------------------')
 Std_Error_3
 ```
 
-
+###### CV2
 ```{r}
 set.seed(1)
 EstIntegral_cv2 <- numeric(length(grid_t))
@@ -214,7 +213,37 @@ print('-----------------------------')
 Std_Error_3
 ```
 
-#### 2.Stratified Sampling
+
+
+###### CV3
+```{r}
+set.seed(1)
+EstIntegral_cv3 <- numeric(length(grid_t))
+Diff_cv3 <- numeric(length(grid_t))
+SE_cv3 <- numeric(length(grid_t))
+
+for (t in grid_t){
+  u <- runif(n)
+  X <- ((sin(pi/2*u))^t + (cos(pi/2*u))^t) * pi/2
+  X_tilde <- ((pi/2*u - (pi/2*u)^3/6)^t + (1 - (pi/2*u)^2/2)^t) * pi/2
+  Y <- X_tilde - mean(X_tilde)
+  
+  c <- -cov(X,Y)/var(Y)
+  X_cv3 <- X+c*Y
+  EstIntegral_cv3[t] <- mean(X_cv3)
+  Diff_cv3[t] <- EstIntegral_3[t] -  mean(X_cv3)
+  SE_cv3[t] <- sd(X_cv3)/sqrt(n)
+}
+
+Std_Error_3
+print('----------------')
+SE_cv3
+```
+
+
+
+
+#### Add Stratified Sampling
 ```{r}
 set.seed(1)
 n <- 10^6
