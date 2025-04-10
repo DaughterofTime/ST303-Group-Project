@@ -50,8 +50,6 @@ Q2_summary <- data.frame(m, nu, lambda, alpha, theoretical_mean, theoretical_var
 Q2_summary
 ```
 
-
-
 ### With transformation
 $$
 y = \tan^{-1}(\frac{x - \lambda}{\alpha}), y \in [-\frac{\pi}{2}, \frac{\pi}{2}]
