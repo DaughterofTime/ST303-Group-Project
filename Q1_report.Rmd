@@ -182,6 +182,15 @@ for (t in grid_t){
 
 
 #### Stratified Sampling + Control Variates
+
+$$
+X=[(\sin(\frac{\pi}{2}\frac{U_j + j - 1}{n}))^{t} + (\cos(\frac{\pi}{2}\frac{U_j + j - 1}{n}))^t]\frac{\pi}{2}\\
+\tilde{X}=[(\frac{\pi}{2}\frac{U_j + j - 1}{n}-\frac{\pi}{2}\frac{(\frac{U_j+j-1}{n})^{3}}{6})^{t} + (1-\frac{(\frac{\pi}{2}\frac{U_j+j-1}{n})^{2}}{2})^t]\frac{\pi}{2}\\
+Y=\tilde{X}-\mathbb{E}\left(\tilde{X}\right)
+$$
+Calculate the $\text{Cov}(X,Y)$ and $\text{Var}(Y)$ with the samples to determine $c^{\star}$, $c^{\star}=-\frac{\text{Cov}(X,Y)}{\text{Var}(Y)}$. \
+Approximate $\theta$ with the mean of $X+c^{\star}Y$ and standard errors with the standard errors of $X+c^{\star}Y$.
+
 ```{r include=FALSE}
 EstIntegral_cvss <- numeric(length(grid_t))
 Diff_cvss <- numeric(length(grid_t))
@@ -201,7 +210,6 @@ for (t in grid_t){
   Diff_cvss[t] <- exact_values_C[t] -  mean(X_cvss)
   SE_cvss[t] <- sd(X_cvss)/sqrt(n)
 }
-
 ```
 
 #### Compare all variance reduction methods
@@ -327,11 +335,11 @@ improve_SS
 #### Stratified Sampling + Antithetic Variate reduction
 To combine the stratified sampling with antithetic variate reduction, we calculte the mean of the following to estimations:
 $$
-h(U)=\frac{4}{N}\sum_{i=1}^{N}\frac{\sin(\sqrt{(\frac{U_i+i-1}{n})^{2} + (\frac{U_j+j-1}{n})^2}}{\sqrt{(\frac{U_i+i-1}{n})^{2} + (\frac{U_j+j-1}{n})^2}},
+h(U)=\frac{4}{N}\sum_{i=1}^{N}\frac{\sin(\sqrt{(\frac{U_i+i-1}{n})^{2} + (\frac{U_j+j-1}{n})^2})}{\sqrt{(\frac{U_i+i-1}{n})^{2} + (\frac{U_j+j-1}{n})^2}},
 $$
 and
 $$
-h(1-U)=\frac{4}{N}\sum_{i=1}^{N}\frac{\sin(\sqrt{(\frac{i-U_i}{n})^{2} + (\frac{j-U_j}{n})^2}}{\sqrt{(\frac{i-U_i}{n})^{2} + (\frac{j-U_j}{n})^2}}.
+h(1-U)=\frac{4}{N}\sum_{i=1}^{N}\frac{\sin(\sqrt{(\frac{i-U_i}{n})^{2} + (\frac{j-U_j}{n})^2})}{\sqrt{(\frac{i-U_i}{n})^{2} + (\frac{j-U_j}{n})^2}}.
 $$
 
 ```{r include=FALSE}
