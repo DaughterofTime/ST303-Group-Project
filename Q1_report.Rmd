@@ -124,17 +124,8 @@ According to the transformation methods above, transformation 3 has the smallest
 The antithetic variate reduction is not applicable since the function is not monotone. Then we try control variates method first.
 
 #### 1.Control variates method
-We have to estimate
-$$
-  \theta = \mathbb{E}(X) = \int_{0}^{1}{\frac{\pi}2[(\sin(\frac{\pi}2u))^{t}+(\cos(\frac{\pi}2))^{t}]}\,du,\quad\\
-  \text{where}\quad X=g(U)=\frac{\pi}2[(\sin(\frac{\pi}2u))^{t}+(\cos(\frac{\pi}2u)^{t}],\quad U \overset{d}{\sim} \mathcal{U}(0,1).
-$$
-We want to find a random variable $Y$ with mean $0$ and a good constant $c$ such that $\mathbb{E}(X+cY) \approx \theta$.
 
-$$
-\tilde{X}=(\frac{\pi}{2}u-\frac{(\frac{\pi}{2}u)^{3}}{6})^{t}+(1-\frac{(\frac{\pi}{2}u)^{2}}{2})^{t} \\
-Y=\tilde{X}-\mathbb{E}\left(\tilde{X}\right)
-$$
+We want to find a random variable $Y$ with mean $0$ and a good constant $c$ such that $\mathbb{E}(X+cY) \approx \theta$.
 
 \begin{itemize}
   \item Simulate $U_1, U_2, \ldots, U_n \overset{d}{\sim} \mathcal{U}(0,1)$.
@@ -163,10 +154,14 @@ for (t in grid_t){
   Diff_cv3[t] <- exact_values_C[t] -  mean(X_cv3)
   SE_cv3[t] <- sd(X_cv3)/sqrt(n)
 }
-
 ```
 
 #### Stratified Sampling
+We estimate:
+$$
+h(U)=[(\sin(\frac{\pi}{2}\frac{U_j + j - 1}{n}))^{t} + (\cos(\frac{\pi}{2}\frac{U_j + j - 1}{n}))^t]\frac{\pi}{2}
+$$
+
 ```{r include=FALSE}
 set.seed(1)
 
