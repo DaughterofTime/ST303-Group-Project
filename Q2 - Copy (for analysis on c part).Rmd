@@ -167,23 +167,44 @@ Q2_summary_quantiles
 
 ### Compare two types of quantiles:
 ```{r}
-# temp <- Q2_summary_quantiles %>%
-#   filter(nu == -5 & alpha == 10 & lambda %in% c(-5)) %>%
-#   select(m, `0.05`, `0.1`, `0.25`, `0.5`, `0.75`, `0.9`, `0.95`)
-# 
-# df_long <- pivot_longer(
-#   temp,
-#   cols = -m,
-#   names_to = "Percentile",
-#   values_to = "Value"
-# )
-# 
-# ggplot(df_long, aes(x = Percentile, y = Value, group = m, color = factor(m))) +
-#   geom_line() +
-#   geom_point() +
-#   labs(x = "Percentile", y = "Value", color = "m") +
-#   theme_minimal()
-# 
-# df_long
+Q2_summary_quantiles_diff <- Q2_summary_quantiles %>%
+  mutate(`0.05` = `Empirical_5%` - `CLT_5%`,
+         `0.10` = `Empirical_10%` - `CLT_10%`,
+         `0.25` = `Empirical_25%` - `CLT_25%`,
+         `0.50` = `Empirical_25%` - `CLT_25%`,
+         `0.75` = `Empirical_75%` - `CLT_75%`,
+         `0.90` = `Empirical_90%` - `CLT_90%`,
+         `0.95` = `Empirical_95%` - `CLT_95%`) %>%
+  select(m, nu, lambda, alpha, `0.05`, `0.10`, `0.25`, `0.50`, `0.75`, `0.90`, `0.95`)
+
+Q2_summary_quantiles_diff
+```
+
+
+
+```{r}
+temp <- Q2_summary_quantiles_diff %>%
+  mutate(m = round(m, digits = 3), nu = round(nu, digits = 3)) %>%
+  filter(!m %in% c(1.6, 2.533)) %>% # Remove the two columns to make plots nicer
+  select(m, nu, `0.05`, `0.10`, `0.25`, `0.50`, `0.75`, `0.90`, `0.95`)
+
+df_long <- pivot_longer(
+ temp,
+ cols = c(`0.05`, `0.10`, `0.25`, `0.50`, `0.75`, `0.90`, `0.95`),
+ names_to = 'x',
+ values_to = "y"
+)
+
+ggplot(df_long, aes(x = x, y = y, color = factor(m))) +
+  geom_boxplot() +
+  facet_wrap(~nu) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  labs(x = "Percents", y = "Empirical Percentile - CLT Percentile", color = "m")
+
+ggplot(df_long, aes(x = x, y = y, color = factor(nu))) +
+  geom_boxplot() +
+  facet_wrap(~m) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  labs(x = "Percents", y = "Empirical Percentile - CLT Percentile", color = "nu")
 ```
 
