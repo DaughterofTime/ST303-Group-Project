@@ -309,7 +309,7 @@ The antithetic variate reduction reduces the standard error by 75.8793%.
 #### 2.Stratified Sampling
 Since $1 - U_i \overset{d}{=} U_i$, we can compute
 $$
-h(U)=\frac{4}{N}\sum_{i=1}^{N}\frac{\sin(\sqrt{(\frac{(U_i+i-1)}{n})^{2} + ((\frac{(U_j+j-1)}{n})^2})}{\sqrt{(\frac{(U_i+i-1)}{n})^{2} + ((\frac{(U_j+j-1)}{n})^2})},
+h(U)=\frac{4}{N}\sum_{i=1}^{N}\frac{\sin(\sqrt{(\frac{U_i+i-1}{n})^{2} + (\frac{U_j+j-1}{n})^2})}{\sqrt{(\frac{U_i+i-1}{n})^{2} + (\frac{U_j+j-1}{n})^2}},
 $$
 where $X_1,\ldots,X_N \overset{d}{\sim} \mathcal{U}(0,1)$, $Y_1,\ldots,Y_N \overset{d}{\sim} \mathcal{U}(0,1)$, and the samples are independent.
 ```{r include=FALSE}
@@ -331,7 +331,16 @@ improve_SS
 ```
 
 
-#### Stratified Sampling + Antithetic Variate
+#### Stratified Sampling + Antithetic Variate reduction
+To combine the stratified sampling with antithetic variate reduction, we calculte the mean of the following to estimations:
+$$
+h(U)=\frac{4}{N}\sum_{i=1}^{N}\frac{\sin(\sqrt{(\frac{U_i+i-1}{n})^{2} + (\frac{U_j+j-1}{n})^2}}{\sqrt{(\frac{U_i+i-1}{n})^{2} + (\frac{U_j+j-1}{n})^2}},
+$$
+and
+$$
+h(1-U)=\frac{4}{N}\sum_{i=1}^{N}\frac{\sin(\sqrt{(\frac{i-U_i}{n})^{2} + (\frac{j-U_j}{n})^2}}{\sqrt{(\frac{i-U_i}{n})^{2} + (\frac{j-U_j}{n})^2}}.
+$$
+
 ```{r include=FALSE}
 set.seed(1)
 n <- 10^5
@@ -348,7 +357,7 @@ rbind(Mu_avss, Diff_avss, SE_avss)
 ```
 
 ```{r}
-improve_SS <- (EstIntegral_mc - Mu_SS)/EstIntegral_mc
+improve_SS <- (EstIntegral_mc - Mu_avss)/EstIntegral_mc
 improve_SS
 ```
 
@@ -356,12 +365,11 @@ improve_SS
 The following table shows the comparison between different methods:
 ```{r echo=FALSE}
 df_1b<-data.frame(
-  Method=c("Ture Value_1b","MC_1b","AV_1b","SS_1b"),
-  Mean=c(true_integral_1b,EstIntegral_mc,EstIntegral_av,Mu_SS),
-  Mean_diff=c("NA",mean(Diff_mc),mean(Mean_diff_av),mean(Diff_SS)),
-  Standar_error=c("NA",mean(Std_Error_mc),mean(Std_Error_av),mean(SE_SS))
+  Method=c("Ture Value_1b","MC_1b","AV_1b","SS_1b","AVSS_1b"),
+  Mean=c(true_integral_1b,EstIntegral_mc,EstIntegral_av,Mu_SS,Mu_avss),
+  Diff=c("NA",Diff_mc,Mean_diff_av,Diff_SS,Diff_avss),
+  Standar_error=c("NA",Std_Error_mc,Std_Error_av,SE_SS,SE_avss)
 )
 df_1b
 ```
-
-Therefore, the antithetic variate reduction can improve the accurarcy by 75.8793%, which is the best.
+Therefore, the antithetic variate reduction can reduce the variance by 75.8793%, and the difference between estimated mean and the true mean is the smallest. Therefore, the antithetic variate reduction is the best method to improve the accuracy.
