@@ -11,10 +11,11 @@ knitr::opts_chunk$set(echo = TRUE)
 ```{r include=FALSE}
 library(tidyverse)
 library(ggplot2)
+library(gridExtra)
 ```
 
 ## Question 2 
-### (a), (b) \
+### (a)\
 We generate 10 values for each of the parameters $m$, $\nu$, $\lambda$, $\alpha$, based on the conditions on their values specified in the question. They are shuffled so that $10^4 = 10000$ distinct sets of parameters are created. \
 ```{r}
 m_list <- seq(1.6, 10, length.out = 10)
@@ -30,18 +31,17 @@ lambda <- groups$Var3
 alpha <- groups$Var4
 ```
 
-```{r include=FALSE}
-# Calculate the theoretical mean and variance for each set of parameters using the formula from part (b)
+We also calculate the theoretical mean and variance for each set of parameters using the formula from part (b): \
+```{r}
 theoretical_mean <- lambda - alpha*nu/(2*(m - 1))
 theoretical_var <- alpha^2/(2*m - 3) * (1 + nu^2/(4*(m - 1)^2))
 ```
 
-
-```{r include=FALSE}
-# Create a dataframe summarising all information about the future simulated dataset
+Next, we create a dataframe summarising all information about the future simulated datasets. This dataset has 10000 rows, each row representing the information of one set of parameters generated before. \
+```{r}
 Q2_summary <- data.frame(m, nu, lambda, alpha, 
                          theoretical_mean, theoretical_var)
-Q2_summary
+head(Q2_summary)
 ```
 
 
@@ -65,7 +65,7 @@ g(y)\propto e^{-\nu y}
 $$
 **Envelope function 3** \
 $$
-g(y)\propto\frac{1}{2}\cos(y)
+g(y)\propto\cos(y)
 $$
 
 We can derive two more envelope functions from the original form of the target function, i.e.
@@ -86,15 +86,22 @@ $$
 g(y) \propto (1+\frac{z^{2}}{k})^{-\frac{k+1}{2}}
 $$
 
+We run R codes across all sets of parameters to get the **sample mean**, **sample variance** and **empirical acceptance rate** for each envelope function and each set of parameters. These numbers will be integrated into `Q2_summary` dataset as new columns so that we can compare the performance of different envelope functions later.\
+
+Unfortunately, due to the limit on number of pages, we are unable to explain every algorithm we wrote in R. We will elaborate on the best envelope function we picked later on, after the best envelope function is picked.\
+R will take approximately 12 minutes to run the codes for all 5 envelope functions. That is a reasonable efficiency for 10000 sets of parameters. \
+
 #### Codes for Envelope function 1 (uniform)
 ```{r include=FALSE}
 # Generate Y
+set.seed(1)
 n <- 10^5
 Y <- runif(n) * pi - pi/2
 ```
 
 ```{r include=FALSE}
 # Generate the sample using AR
+set.seed(1)
 ptm <- proc.time()
 U <- runif(n)
 
@@ -137,6 +144,8 @@ Q2_summary
 ```
 
 #### Codes for Envelope function 2 (exponential)
+Envelope function 2 is not a practical choice, as it will collapse every time $m$ becomes a decimal. That's why all the codes below are hashtaged.
+
 $$
 g(y) = \frac{\nu e^{-\nu y}}{e^{\frac{\pi}{2}\nu} - e^{-\frac{\pi}{2}\nu}}
 $$
@@ -198,6 +207,7 @@ $$
 
 ```{r include=FALSE}
 # Generate Y
+set.seed(1)
 n <- 10^5
 U <- runif(n)
 
@@ -207,6 +217,7 @@ sd(Y)/sqrt(n)
 
 ```{r include=FALSE}
 # Control variate method
+set.seed(1)
 Y_prime <- 1/2 - U
 c <- -12*cov(Y, Y_prime)
 sample <- Y + c*Y_prime
@@ -215,6 +226,7 @@ sd(sample)/sqrt(n)
 
 ```{r include=FALSE}
 # Generate the sample using AR
+set.seed(1)
 ptm <- proc.time()
 U <- runif(n)
 
@@ -263,12 +275,14 @@ $$
 
 ```{r include=FALSE}
 # Generate Y
+set.seed(1)
 n <- 10^5
 Y <- lapply(1:length(nu), function(i) alpha[i] * tan(pi*runif(n) - pi/2) + lambda[i])
 ```
 
 ```{r include=FALSE}
 # Generate the sample using AR
+set.seed(1)
 ptm <- proc.time()
 U <- runif(n)
 
@@ -285,9 +299,6 @@ sample_envelope_4 <- lapply(1:length(nu), function(i){
   Y[U < ((1 + temp_1^2)^{-m} * exp(-nu * atan(temp_1)))/((1 + temp_2^2)^{1-m} * exp(-nu*atan(temp_2)))]
 })
 sim_envelope_4 <- (proc.time()- ptm)[3]
-
-
-plot(density(sample_envelope_4[[1]]), type = 'l')
 ```
 
 ```{r include=FALSE}
@@ -307,8 +318,6 @@ envelope_4_empirical_acceptance <- unlist(lapply(1:length(nu), function(i) lengt
 # update summary_Q2
 Q2_summary <- Q2_summary %>% 
   mutate(envelop_4_empirical_mean, envelop_4_empirical_var, envelope_4_empirical_acceptance)
-
-colnames(Q2_summary)
 ```
 
 
@@ -327,6 +336,7 @@ Step 1: Simulate a $Z$ from the built-in t-distribution function `rt` \
 Step 2: Transform $Z$ to $Y$ by using $Y = Z \frac{\alpha}{\sqrt{k}} + \lambda$ \
 ```{r include=FALSE}
 # Generate Y
+set.seed(1)
 n <- 10^5
 k <- 2*m - 1
 
@@ -337,6 +347,7 @@ Y <- lapply(1:length(nu), function(i){
 
 ```{r include=FALSE}
 # Generate the sample using AR
+set.seed(1)
 ptm <- proc.time()
 U <- runif(n)
 
@@ -373,9 +384,14 @@ Q2_summary <- Q2_summary %>%
 ```
 
 
-### Pick the best envelope function
-### Check the rate of acceptance
-```{r}
+
+### Pick the best envelope function \
+When writing the codes, we noticed that envelope function 2 is not a practical choice, as it will collapse every time $m$ becomes a decimal. Hence, we kicked it out from the further analysis of performances. \
+
+To pick the best envelope function, we compare **a)** the empirical rate of acceptance and **b)** the time of running the acceptance-rejection algorithm. \
+
+We summarise the empirical rate of acceptance of these envelope function in the boxplot below: \
+```{r echo=FALSE}
 Q2_summary_acceptance <- Q2_summary %>%
   select(m, nu, lambda, alpha, envelope_1 = envelope_1_empirical_acceptance, envelope_3 = envelope_3_empirical_acceptance, envelope_4 = envelope_4_empirical_acceptance, envelope_5 = envelope_5_empirical_acceptance)
 
@@ -385,20 +401,33 @@ df_long <- pivot_longer(Q2_summary_acceptance[, 5:ncol(Q2_summary_acceptance)], 
 ggplot(df_long, aes(x = Envelope, y = Acceptance, fill = Envelope)) +
   geom_boxplot() +
   theme_minimal() + 
-  theme(legend.position = "none")
+  theme(legend.position = "none") +
+  labs(x = 'Envelope Function', y = 'Empirical Acceptance Rate', title = 'Compare the Performance of Different Envelope Functions')
 ```
 
-
-#### Check the time consumed
-```{r}
+We summarised the time consumed to run different algorithms in the following table: \
+```{r echo=FALSE}
 rbind(sim_envelope_1, sim_envelope_3, sim_envelope_4, sim_envelope_5)
-#sim_envelope_3
 ```
 
-Thus, pick envelope 3 as our envelope function. 
+We can see that generally, envelope 3 has significantly better acceptance rates than the others, while it has relatively good computational efficiency. Thus, pick envelope 3 as our envelope function. \
 
-### Analysis on acceptance
-```{r}
+Below is extra details about the algorithm we used for envelope 3: \
+With transformation $y = arctan(\frac{x - \lambda}{\alpha})$, we have \
+$$
+f(y) \propto (\cos(y))^{2m}e^{-\nu y} \\
+g(y) = \frac{1}{2}\cos(y)
+$$
+
+Accept the sample from the envelope function when \
+$$
+U < \frac{(cos(y))^{2m - 1} e^{-\nu y}}{\left[cos\left( arctan(-\frac{\nu}{2m-1})\right)\right] e^{-\nu \ arctan(-\frac{\nu}{2m-1})}}
+$$
+
+The question also asks which values of parameters will give the most efficient simulation. We will answer this question here. \
+By analysing the information from the updated `Q2_summary` dataframe with `dplyr` package, we are able to observe that the rate of acceptance is not affected by either $\lambda$ or $\alpha$. Thus, check the relationship between rate of acceptance and $m$, $\nu$, using `ggplot2`: \
+
+```{r include=FALSE}
 Q2_summary_acceptance_3 <- Q2_summary_acceptance %>%
   select(m, nu, lambda, alpha, envelope_3) %>%
   arrange(desc(envelope_3))
@@ -406,9 +435,7 @@ Q2_summary_acceptance_3 <- Q2_summary_acceptance %>%
 Q2_summary_acceptance_3
 ```
 
-It is clear that the rate of acceptance is not affected by either $\lambda$ or $\alpha$. Thus, check the relationship between rate of acceptance and $m$, $\nu$:
-
-```{r}
+```{r include=FALSE}
 Q2_summary_acceptance_temp <- Q2_summary_acceptance_3 %>% 
   group_by(envelope_3) %>%
   summarize(m = unique(m), nu = unique(nu)) %>%
@@ -417,23 +444,26 @@ Q2_summary_acceptance_temp <- Q2_summary_acceptance_3 %>%
 Q2_summary_acceptance_temp
 ```
 
-```{r}
-# Try ggplot2
-library(ggplot2)
+```{r echo=FALSE}
 ggplot(Q2_summary_acceptance_temp, aes(x = m, y = envelope_3, col = factor(nu))) + 
          geom_point(alpha = 0.5, size = 5) + 
-         theme_minimal()
+         theme_minimal() +
+         labs(y = 'Empirical Acceptance Rate', color = expression(nu), title = 'Empirical Acceptance Rates vs m')
 
 ggplot(Q2_summary_acceptance_temp, aes(x = nu, y = envelope_3, col = factor(m))) + 
          geom_point(alpha = 0.5, size = 5) + 
-         theme_minimal()
+         theme_minimal() + 
+         labs(y = 'Empirical Acceptance Rate', x = expression(nu), color = 'm', title = expression('Empirical Acceptance Rates vs '*nu))
 ```
 
-Hence, the acceptance rate is highest when $m$ is small, **AND** $\nu$ is close to zero.
+From the plot, we can see that the acceptance rate is highest when $m$ is small, **AND** $\nu$ is close to zero.
 
-## b)
-### Analysis on mean
-```{r}
+### b)
+We have already calculated the theoretical mean and variances when we defined `Q2_summary` early on. Now, we compare them with the sample mean and variances using the `dplyr` package, and the differences between them are plotted. 
+From the dataframe, we noticed that $\lambda$ has no effect on either the deviation from theoretical mean or the deviation from theoretical variances. Use plots to investigate the effects of other parameters:
+
+#### Analysis on mean
+```{r include=FALSE}
 Q2_summary_empirical_mean <- Q2_summary %>%
   mutate(diff = envelop_3_empirical_mean - theoretical_mean) %>%
   select(m, nu, lambda, alpha, diff) %>%
@@ -443,61 +473,80 @@ Q2_summary_empirical_mean
 mean(Q2_summary_empirical_mean$diff) # the mean difference is very small
 ```
 
-It is obvious that $\lambda$ has no effect on the deviation from theoretical mean. Use plots to investigate the effects of other parameters:
-```{r}
+```{r include=FALSE}
 Q2_summary_empirical_mean_temp <- Q2_summary_empirical_mean %>% 
   group_by(diff) %>%
   summarize(m = unique(m), nu = unique(nu), alpha = unique(alpha)) %>%
   arrange(diff)
 ```
 
-```{r}
-# Plots
-ggplot(Q2_summary_empirical_mean_temp, aes(m, diff, col = factor(nu))) + geom_point() + theme_minimal()
-ggplot(Q2_summary_empirical_mean_temp, aes(nu, diff, col = factor(m))) + geom_point() + theme_minimal()
-ggplot(Q2_summary_empirical_mean_temp, aes(alpha, diff, col = factor(nu))) + geom_point() + theme_minimal()
-```
-
-Hence, the difference to the theoretical mean is the smallest when \\
-- $\m$ is large; \\
-- $\nu$ is close to zero; \\
-- $\alpha$ is small.\\
-
-### Analysis on variance
-```{r}
+#### Analysis on variance
+```{r include=FALSE}
 Q2_summary_empirical_var <- Q2_summary %>%
   mutate(diff = envelop_3_empirical_var - theoretical_var) %>%
   select(m, nu, lambda, alpha, diff) %>%
   arrange(diff)
 
-Q2_summary_empirical_var
 mean(Q2_summary_empirical_var$diff) # the difference to theoretical variance is large
 sum(Q2_summary_empirical_var$diff >=0) # there is no empirical variance that is higher than the theoretical variance.
 ```
 
-It is obvious that $\lambda$ has no effect on the deviation from theoretical variance. Use plots to investigate the effects of other parameters:
-```{r}
+```{r include=FALSE}
 Q2_summary_empirical_var_temp <- Q2_summary_empirical_var %>% 
   group_by(diff) %>%
   summarize(m = unique(m), nu = unique(nu), alpha = unique(alpha)) %>%
   arrange(diff)
 ```
 
-```{r}
-# Plots
-ggplot(Q2_summary_empirical_var_temp, aes(m, diff, col = factor(nu))) + geom_point() + theme_minimal()
-ggplot(Q2_summary_empirical_var_temp, aes(nu, diff, col = factor(m))) + geom_point() + theme_minimal()
-ggplot(Q2_summary_empirical_var_temp, aes(alpha, diff, col = factor(nu))) + geom_point() + theme_minimal()
+#### Plots
+```{r echo=FALSE}
+# Mean plots
+p_mean_m <- ggplot(Q2_summary_empirical_mean_temp, aes(m, diff)) +
+  geom_point() + 
+  theme_minimal() +
+  labs(y = 'Sample Mean - Theoretical Mean', title = 'Difference in mean vs m') +
+  theme(axis.title.y = element_text(size = 7), title = element_text(size = 8))
+p_mean_nu <- ggplot(Q2_summary_empirical_mean_temp, aes(nu, diff)) + 
+  geom_point() + 
+  theme_minimal() +
+  labs(y = 'Sample Mean - Theoretical Mean', x = expression(nu), title = expression('Difference in mean vs '*nu)) +
+  theme(axis.title.y = element_text(size = 7), title = element_text(size = 8))
+p_mean_alpha <- ggplot(Q2_summary_empirical_mean_temp, aes(alpha, diff)) + 
+  geom_point() + 
+  theme_minimal() +
+  labs(y = 'Sample Mean - Theoretical Mean', x = expression(alpha), title = expression('Difference in mean vs '*alpha)) +
+  theme(axis.title.y = element_text(size = 7), title = element_text(size = 8))
+
+# Variance plots
+p_var_m <- ggplot(Q2_summary_empirical_var_temp, aes(m, diff)) + 
+  geom_point() + 
+  theme_minimal() +
+  labs(y = 'Sample Variance - Theoretical Variance', title = 'Difference in variance vs m') +
+  theme(axis.title.y = element_text(size = 7), title = element_text(size = 8))
+p_var_nu <- ggplot(Q2_summary_empirical_var_temp, aes(nu, diff)) + 
+  geom_point() + 
+  theme_minimal() +
+  labs(y = 'Sample Variance - Theoretical Variance', x = expression(nu), title = expression('Difference in variance vs '*nu)) +
+  theme(axis.title.y = element_text(size = 7), title = element_text(size = 8))
+p_var_alpha <- ggplot(Q2_summary_empirical_var_temp, aes(alpha, diff)) + 
+  geom_point() + 
+  theme_minimal() +
+  labs(y = 'Sample Variance - Theoretical Variance', x = expression(alpha), title = expression('Difference in variance vs '*alpha)) +
+  theme(axis.title.y = element_text(size = 7), title = element_text(size = 8))
+
+grid.arrange(p_mean_m, p_mean_nu, p_mean_alpha, p_var_m, p_var_nu, p_var_alpha, ncol = 3)
 ```
 
-Hence, the difference to the theoretical variance is the smallest when \\
-- $\m$ is large; \\
-- $\nu$ is close to zero; \\
-- $\alpha$ is small.\\
-Is this a good thing or not?
+From the plots and the other analysis from the dataframe, we draw the following conclusions: \
+**1.** The differences between the sample and theoretical mean/variance is the smallest when \
+- $\m$ is large; \
+- $\nu$ is close to zero; \
+- $\alpha$ is small. \
+**2.** The mean of all differences in mean is small. \
+**3.** The mean of all differences in variance is large, and there is no empirical variance that is higher than the theoretical variance. \\
 
-## c)
-### Empirical quantiles
+### c)
+#### Empirical quantiles
 ```{r}
 length(X_envelope_3)
 quantile_percents <- c(0.05, 0.1, 0.25, 0.5, 0.75, 0.9, 0.95)
