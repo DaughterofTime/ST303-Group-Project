@@ -59,7 +59,7 @@ rbind(mean_1=mean(sample_1),mean_diff_1 = mean(Diff_1), mean_SE_1 = mean(Std_Err
 ```
 
 #### Transformation 2
-For transformation 2, we use $u=cosx$, then $x=\arccos(u)$. When $x=0$, then $u=0$, and when $x=\pi/2$, then $u=1$.
+For transformation 2, we use $u=cosx$, then $x=\arccos(u)$. When $x=0$, then $u=1$, and when $x=\pi/2$, then $u=0$.
 We compute:
 $$
 \int_{0}^{\pi/2} {(\sin(x))^{t}+(\cos(x))^{t}}\,dx \overset{ x=\arccos(u)}{=} \int_{0}^{1} {u^{t}[\sin(\arccos(u)]^{-1}+[\sin(\arccos(u)]^{t-1}}\,du  \overset{\mathcal{U}\overset{d}{=}\mathcal{U}(0,1)} {=}\\ \mathbb{E}\left[{u^{t}[\sin(\arccos(u)]^{-1}+[\sin(\arccos(u)]^{t-1}}\right] \overset{MC}{\approx} \sum_{i=1}^{N}[u^{t}[\sin(\arccos(u)]^{-1}+[\sin(\arccos(u)]^{t-1}]
@@ -86,7 +86,7 @@ rbind(mean_2=mean(sample_2),mean_diff_2 = mean(Diff_2), mean_SE_2 = mean(Std_Err
 According to the above results, transformation 1 and 2 have exactly the same mean and standard error.
 
 #### Transformation 3
-For transformation 3, we use $u=\frac{2}\pi*x$, then $x=\frac{\pi}2u$. When $x=0$, then $u=0$, and when $x=\pi/2$, then $u=1$.
+For transformation 3, we use $u=\frac{2}\pi x$, then $x=\frac{\pi}2u$. When $x=0$, then $u=0$, and when $x=\pi/2$, then $u=1$.
 We compute:
 
 $$
