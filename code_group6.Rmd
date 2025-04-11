@@ -1,20 +1,388 @@
 ---
-title: "Q2"
-output:
-  word_document: default
-  html_document: default
-date: "2025-03-26"
+title: "ST303 Group6 Project"
+output: html_document
+date: "2025-04-10"
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-```
-
-```{r include=FALSE}
 library(tidyverse)
 library(ggplot2)
 library(gridExtra)
 ```
+
+# Question 1
+## a)
+### The true values
+We compute the exact values of C(t) for t values from 1 to 100.
+```{r include=FALSE}
+grid_t <- 1:100
+
+exact_formula_C <- function(t){
+  (sqrt(pi) * gamma((t + 1)/2))/gamma(t/2 + 1)
+}
+
+exact_values_C <- exact_formula_C(grid_t)
+```
+
+### Monte Carlo Methods
+We take n=10^6.
+```{r include=FALSE}
+n <- 10^6
+```
+
+#### Transformation 1
+
+For transformation 1, we use $u=sinx$, then $x=arcsin(u)$. When $x=0$, then $u=0$, and when $x=\pi/2$, then $u=1$.
+We compute:
+$$
+\int_{0}^{\pi/2} {(\sin(x))^{t}+(\cos(x))^{t}}\,dx \overset{x=\arcsin(u)}{=} \int_{0}^{1} {u^{t}[\cos(\arcsin(u)]^{-1}+[\cos(\arcsin(u)]^{t-1}}\,du  \overset{\mathcal{U}\overset{d}{=}\mathcal{U}(0,1)} {=}\\ \mathbb{E}\left[{u^{t}[\cos(\arcsin(u)]^{-1}+[\cos(\arcsin(u)]^{t-1}}\right] \overset{MC}{\approx} \sum_{i=1}^{N}[u^{t}[\cos(\arcsin(u)]^{-1}+[\cos(\arcsin(u)]^{t-1}]
+$$
+
+##### Using for loop to investigate the performance of integral across different values of t:
+```{r include=FALSE}
+set.seed(1)
+EstIntegral_1 <- numeric(length(grid_t))
+Diff_1 <- numeric(length(grid_t))
+Std_Error_1 <- numeric(length(grid_t))
+
+for (t in grid_t){
+  u <- runif(n)
+  sample_1 <- u^t*1/(cos(asin(u)))+(cos(asin(u)))^(t-1)
+  
+  EstIntegral_1[t] <- mean(sample_1)
+  Diff_1[t] <- exact_formula_C(t) - EstIntegral_1[t]
+  Std_Error_1[t] <- sd(sample_1)/sqrt(n)
+}
+
+rbind(mean_1=mean(sample_1),mean_diff_1 = mean(Diff_1), mean_SE_1 = mean(Std_Error_1))
+```
+
+#### Transformation 2
+For transformation 2, we use $u=cosx$, then $x=\arccos(u)$. When $x=0$, then $u=1$, and when $x=\pi/2$, then $u=0$.
+We compute:
+$$
+\int_{0}^{\pi/2} {(\sin(x))^{t}+(\cos(x))^{t}}\,dx \overset{ x=\arccos(u)}{=} \int_{0}^{1} {u^{t}[\sin(\arccos(u)]^{-1}+[\sin(\arccos(u)]^{t-1}}\,du  \overset{\mathcal{U}\overset{d}{=}\mathcal{U}(0,1)} {=}\\ \mathbb{E}\left[{u^{t}[\sin(\arccos(u)]^{-1}+[\sin(\arccos(u)]^{t-1}}\right] \overset{MC}{\approx} \sum_{i=1}^{N}[u^{t}[\sin(\arccos(u)]^{-1}+[\sin(\arccos(u)]^{t-1}]
+$$
+
+##### Using for loop to investigate the performance of integral across different values of t:
+```{r include=FALSE}
+set.seed(1)
+EstIntegral_2 <- numeric(length(grid_t))
+Diff_2 <- numeric(length(grid_t))
+Std_Error_2 <- numeric(length(grid_t))
+
+for (t in grid_t){
+  u <- runif(n)
+  sample_2 <- (sin(acos(u)))^{t-1} + u^t*(sin(acos(u)))^{-1}
+  
+  EstIntegral_2[t] <- mean(sample_2)
+  Diff_2[t] <- exact_formula_C(t) - EstIntegral_2[t]
+  Std_Error_2[t] <- sd(sample_2)/sqrt(n)
+}
+
+rbind(mean_2=mean(sample_2),mean_diff_2 = mean(Diff_2), mean_SE_2 = mean(Std_Error_2))
+```
+According to the above results, transformation 1 and 2 have exactly the same mean and standard error.
+
+#### Transformation 3
+For transformation 3, we use $u=\frac{2}\pi x$, then $x=\frac{\pi}2u$. When $x=0$, then $u=0$, and when $x=\pi/2$, then $u=1$.
+We compute:
+
+$$
+\int_{0}^{\pi/2} {(\sin(x))^{t}+(\cos(x))^{t}}\,dx \overset{x=\frac{\pi}2u}{=} \int_{0}^{1} {[(\sin((\frac{\pi}2u))^{t}+((\cos(\frac{\pi}2u))^{t}]\frac{\pi}2}\,du  \overset{\mathcal{U}\overset{d}{=}\mathcal{U}(0,1)} {=}\\ \mathbb{E}\left[\frac{\pi}2[(\sin((\frac{\pi}2u))^{t}+((\cos(\frac{\pi}2u))^{t}]\right] \overset{MC}{\approx} \sum_{i=1}^{N}\frac{\pi}2[(\sin((\frac{\pi}2u))^{t}+((\cos(\frac{\pi}2u))^{t}]
+$$
+
+##### Using for loop to investigate the performance of integral across different values of t:
+```{r include=FALSE}
+set.seed(1)
+EstIntegral_3 <- numeric(length(grid_t))
+Diff_3 <- numeric(length(grid_t))
+Std_Error_3 <- numeric(length(grid_t))
+
+for (t in grid_t){
+  u <- runif(n)
+  sample_3 <- ((sin(pi/2*u))^t + (cos(pi/2*u))^t) * pi/2
+  
+  EstIntegral_3[t] <- mean(sample_3)
+  Diff_3[t] <- exact_formula_C(t) - EstIntegral_3[t]
+  Std_Error_3[t] <- sd(sample_3)/sqrt(n)
+}
+
+rbind(mean_diff_3 = mean(Diff_3), SE_3 = mean(Std_Error_3))
+```
+
+The following table shows the comparison between different methods:
+```{r echo=FALSE}
+df_ts<-data.frame(
+  Transformation = c("Transformation 1","Transformation 2","Transformation 3"),
+  Mean_Diff=c(mean(Diff_1),mean(Diff_2),mean(Diff_3)),
+  Mean_Standard_Error=c(mean(Std_Error_1),mean(Std_Error_2),mean(Std_Error_3))
+)
+df_ts
+```
+
+According to the transformation methods above, transformation 3 has the smallest difference between estimated mean and actual mean, and also the smallest standard error. Thus we do the variance reduction based on transformation 3.
+
+The antithetic variate reduction is not applicable since the function is not monotone. Then we try control variates method first.
+
+#### 1.Control variates method
+
+We want to find a random variable $Y$ with mean $0$ and a good constant $c$ such that $\mathbb{E}(X+cY) \approx \theta$.
+
+\begin{itemize}
+  \item Simulate $U_1, U_2, \ldots, U_n \overset{d}{\sim} \mathcal{U}(0,1)$.
+  \item Simulate $\tilde{X}=(\frac{\pi}{2}u-\frac{(\frac{\pi}{2}u)^{3}}{6})^{t}+(1-\frac{(\frac{\pi}{2}u)^{2}}{2})^{t}$, where $(\frac{\pi}{2}u-\frac{(\frac{\pi}{2}u)^{3}}{6})$ is the Taylor expansion of $\sin(\frac{\pi}{2}u)$, and $(1-\frac{(\frac{\pi}{2}u)^{2}}{2})$ is the Taylor expansion of $\cos(\frac{\pi}{2}u)$.
+  \item Simulate $Y=\tilde{X}-\mathbb{E}\left(\tilde{X}\right)$.
+  \item Calculate the $\text{Cov}(X,Y)$ and $\text{Var}(Y)$ with the samples to determine $c^{\star}$, $c^{\star}=-\frac{\text{Cov}(X,Y)}{\text{Var}(Y)}$
+  \item Approximate $\theta$ with the mean of $X+c^{\star}Y$ and standard errors with the standard errors of $X+c^{\star}Y$.
+\end{itemize}
+
+###### Control Variate Method
+```{r include=FALSE}
+set.seed(1)
+EstIntegral_cv3 <- numeric(length(grid_t))
+Diff_cv3 <- numeric(length(grid_t))
+SE_cv3 <- numeric(length(grid_t))
+
+for (t in grid_t){
+  u <- runif(n)
+  X <- ((sin(pi/2*u))^t + (cos(pi/2*u))^t) * pi/2
+  X_tilde <- ((pi/2*u - (pi/2*u)^3/6)^t + (1 - (pi/2*u)^2/2)^t) * pi/2
+  Y <- X_tilde - mean(X_tilde)
+  
+  c <- -cov(X,Y)/var(Y)
+  X_cv3 <- X+c*Y
+  EstIntegral_cv3[t] <- mean(X_cv3)
+  Diff_cv3[t] <- exact_values_C[t] -  mean(X_cv3)
+  SE_cv3[t] <- sd(X_cv3)/sqrt(n)
+}
+```
+
+#### Stratified Sampling
+We estimate:
+\begin{align*}
+h(U)=[(\sin(\frac{\pi}{2}\frac{U_j + j - 1}{n}))^{t} + (\cos(\frac{\pi}{2}\frac{U_j + j - 1}{n}))^t]\frac{\pi}{2}
+\end{align*}
+
+```{r include=FALSE}
+set.seed(1)
+
+EstIntegral_ss <- numeric(length(grid_t))
+Diff_ss <- numeric(length(grid_t))
+Std_Error_ss <- numeric(length(grid_t))
+
+for (t in grid_t){
+  j <- 1:n  # split the integral [0, 1] into 10^5 smaller intervals
+  u <- runif(n)
+  
+  sample_ss <- (sin(pi/2*(u + j - 1)/n)^t + cos(pi/2*((u + j - 1)/n))^t) * pi/2
+  EstIntegral_ss[t] <- mean(sample_ss)
+  Diff_ss[t] <- exact_formula_C(t) - EstIntegral_ss[t]
+  Std_Error_ss[t] <- sd(sample_ss)/sqrt(n)
+}
+```
+
+#### Stratified Sampling + Control Variates
+
+$$
+X=[(\sin(\frac{\pi}{2}\frac{U_j + j - 1}{n}))^{t} + (\cos(\frac{\pi}{2}\frac{U_j + j - 1}{n}))^t]\frac{\pi}{2}
+$$
+
+$$
+\tilde{X}=[(\frac{\pi}{2}\frac{U_j + j - 1}{n}-\frac{\pi}{2}\frac{(\frac{U_j+j-1}{n})^{3}}{6})^{t} + (1-\frac{(\frac{\pi}{2}\frac{U_j+j-1}{n})^{2}}{2})^t]\frac{\pi}{2}
+$$
+$$
+Y=\tilde{X}-\mathbb{E}\left(\tilde{X}\right)
+$$
+
+Calculate the $\text{Cov}(X,Y)$ and $\text{Var}(Y)$ with the samples to determine $c^{\star}$, $c^{\star}=-\frac{\text{Cov}(X,Y)}{\text{Var}(Y)}$. \
+Approximate $\theta$ with the mean of $X+c^{\star}Y$ and standard errors with the standard errors of $X+c^{\star}Y$.
+
+```{r include=FALSE}
+EstIntegral_cvss <- numeric(length(grid_t))
+Diff_cvss <- numeric(length(grid_t))
+SE_cvss <- numeric(length(grid_t))
+
+for (t in grid_t){
+  j <- 1:n  # split the integral [0, 1] into 10^5 smaller intervals
+  u <- runif(n)
+
+  X <- (sin(pi/2*(u + j - 1)/n)^t + cos(pi/2*(u + j - 1)/n)^t) * pi/2
+  X_tilde <- ((pi/2*(u + j - 1)/n - (pi/2*(u + j - 1)/n)^3/6)^t + (1 - (pi/2*(u + j - 1)/n)^2/2)^t) * pi/2
+  Y <- X_tilde - mean(X_tilde)
+  
+  c <- -cov(X,Y)/var(Y)
+  X_cvss <- X+c*Y
+  EstIntegral_cvss[t] <- mean(X_cvss)
+  Diff_cvss[t] <- exact_values_C[t] -  mean(X_cvss)
+  SE_cvss[t] <- sd(X_cvss)/sqrt(n)
+}
+```
+
+#### Compare all variance reduction methods
+```{r}
+# Compare SS + CV with pure Monte Carlo without any variance reduction
+(abs(Diff_3) - abs(Diff_cvss))[1:10]
+(round((Std_Error_3 - SE_cvss)/Std_Error_3, digits = 2))[1:10]
+
+# Compare CV with pure Monte Carlo without any variance reduction
+(abs(Diff_3) - abs(Diff_cv3))[1:10]
+(round((Std_Error_3 - SE_cv3)/Std_Error_3, digits = 2))[1:10]
+```
+
+This table represents the differences between two variance reduction methods (SS+CV, only CV) with Monte Carlo Methods for $t=1,2,...,10$.
+
+```{r}
+compare_df <- data.frame(
+  t = 1:10,
+  diff_SSCV = (abs(Diff_3) - abs(Diff_cvss))[1:10],
+  sd_improved_SSCV = (round((Std_Error_3 - SE_cvss)/Std_Error_3, digits = 2))[1:10],
+  diff_CV = (abs(Diff_3) - abs(Diff_cv3))[1:10],
+  sd_improved_CV = (round((Std_Error_3 - SE_cv3)/Std_Error_3, digits = 2))[1:10]
+)
+compare_df
+```
+
+## (b)
+### Calculate the true value of the double integral
+```{r echo=TRUE}
+set.seed(1)
+f <- function(x, y) {
+  r <- sqrt(x^2 + y^2)
+  ifelse(r == 0, 1, sin(r) / r)  # Handle the removable singularity at (0,0)
+}
+
+result <- integrate(function(y) {
+  sapply(y, function(yi) {
+    integrate(function(x) f(x, yi), -1, 1)$value
+  })
+}, -1, 1)
+
+# Print the result
+true_integral_1b <- result$value
+true_integral_1b
+```
+
+### Pure Monte Carlo Methods
+Since the equation is symmetric, we can compute: 
+$$
+    \int_{-1}^{1}\int_{-1}^{1}\frac{\sin(\sqrt{x^{2}+y^{2}})}{\sqrt{x^{2}+y^{2}}}\,dx\,dy{=}4\int_{0}^{1}\int_{0}^{1}\frac{\sin(\sqrt{x^{2}+y^{2}})}{\sqrt{x^{2}+y^{2}}}\,dx\,dy  
+    \overset{(X, Y) ind \overset{d}{\sim} \mathcal{U}(0,1) }{=}\\
+    4\mathbb{E}[\frac{\sin(\sqrt{x^{2}+y^{2}})}{\sqrt{x^{2}+y^{2}}} ] \overset{MC}{\approx} \frac{4}{N}\sum_{i=1}^{N}\frac{\sin(\sqrt{x^{2}+y^{2}})}{\sqrt{x^{2}+y^{2}}}\,dx\,dy ,
+$$
+
+where $X_1,\ldots,X_N \overset{d}{\sim} \mathcal{U}(0,1)$, $Y_1,\ldots,Y_N \overset{d}{\sim} \mathcal{U}(0,1)$, and the samples are independent.
+
+```{r include=FALSE}
+set.seed(1)
+
+n <- 10^5
+x <- runif(n)
+y <- runif(n)
+sample_mc <- 4 * sin(sqrt(x^2 + y^2))/sqrt(x^2 + y^2)
+
+EstIntegral_mc <- mean(sample_mc)
+Diff_mc <- true_integral_1b - EstIntegral_mc
+Std_Error_mc <- sd(sample_mc)/sqrt(n)
+
+rbind(EstIntegral_mc, Diff_mc, Std_Error_mc)
+```
+
+#### 1.Antithetic Variate Reduction
+We need to calculate
+$$
+\frac{4}{N}\sum_{i=1}^{N}\frac{\sin(\sqrt{(x^2 + y^2)})}{\sqrt{x^2 + y^2}}=\frac{4}{N}\sum_{i=1}^{N}\frac{\sin(\sqrt{((1-x)^2 + (1-y)^2)})}{\sqrt{(1-x)^2 + (1-y)^2}},
+$$
+
+where $X_1,\ldots,X_N \overset{d}{\sim} \mathcal{U}(0,1)$, $Y_1,\ldots,Y_N \overset{d}{\sim} \mathcal{U}(0,1)$, and the samples are independent.
+```{r include=FALSE}
+set.seed(1)
+n <- 10^5
+x <- runif(n)
+y <- runif(n)
+sample1 <- 4 * sin(sqrt(x^2 + y^2))/sqrt(x^2 + y^2)
+sample2 <- 4 * sin(sqrt((1-x)^2 + (1-y)^2))/sqrt((1-x)^2 + (1-y)^2)
+EstIntegral_av <- mean((sample1+sample2)/2)
+Mean_diff_av <- true_integral_1b - EstIntegral_av
+Std_Error_av <- sd((sample1+sample2)/2)/sqrt(n)
+
+rbind(EstIntegral_av, Mean_diff_av, Std_Error_av)
+```
+
+```{r echo=TRUE}
+improve_av <- (Std_Error_mc - Std_Error_av)/Std_Error_mc
+improve_av
+```
+
+The antithetic variate reduction reduces the standard error by 75.8793%.
+
+#### 2.Stratified Sampling
+Since $1 - U_i \overset{d}{=} U_i$, we can compute
+$$
+h(U)=\frac{4}{N}\sum_{i=1}^{N}\frac{\sin(\sqrt{(\frac{U_i+i-1}{n})^{2} + (\frac{U_j+j-1}{n})^2})}{\sqrt{(\frac{U_i+i-1}{n})^{2} + (\frac{U_j+j-1}{n})^2}},
+$$
+
+where $X_1,\ldots,X_N \overset{d}{\sim} \mathcal{U}(0,1)$, $Y_1,\ldots,Y_N \overset{d}{\sim} \mathcal{U}(0,1)$, and the samples are independent.
+```{r include=FALSE}
+set.seed(1)
+n <- 10^5
+j <- 1:n
+sample_1b2 <- 4 * (sin(sqrt(((x+j-1)/n)^2 + ((y+j-1)/n)^2)))/sqrt(((x+j-1)/n)^2 + ((y+j-1)/n)^2)
+
+Mu_SS <- mean(sample_1b2)
+Diff_SS <- true_integral_1b - Mu_SS
+SE_SS <- sd(sample_1b2)/sqrt(n)
+
+rbind(Mu_SS, Diff_SS, SE_SS)
+```
+
+```{r echo=TRUE}
+improve_SS <- (EstIntegral_mc - Mu_SS)/EstIntegral_mc
+improve_SS
+```
+
+#### Stratified Sampling + Antithetic Variate reduction
+To combine the stratified sampling with antithetic variate reduction, we calculte the mean of the following to estimations:
+$$
+h(U)=\frac{4}{N}\sum_{i=1}^{N}\frac{\sin(\sqrt{(\frac{U_i+i-1}{n})^{2} + (\frac{U_j+j-1}{n})^2})}{\sqrt{(\frac{U_i+i-1}{n})^{2} + (\frac{U_j+j-1}{n})^2}},
+$$
+and
+$$
+h(1-U)=\frac{4}{N}\sum_{i=1}^{N}\frac{\sin(\sqrt{(\frac{i-U_i}{n})^{2} + (\frac{j-U_j}{n})^2})}{\sqrt{(\frac{i-U_i}{n})^{2} + (\frac{j-U_j}{n})^2}}.
+$$
+
+```{r include=FALSE}
+set.seed(1)
+n <- 10^5
+j <- 1:n
+sample_avss_1 <- 4 * (sin(sqrt(((x+j-1)/n)^2 + ((y+j-1)/n)^2)))/sqrt(((x+j-1)/n)^2 + ((y+j-1)/n)^2)
+sample_avss_2 <- 4 * (sin(sqrt(((j-x)/n)^2 + ((j-y)/n)^2)))/sqrt(((j-x)/n)^2 + ((j-y)/n)^2)
+sample_avss <- (sample_avss_1 + sample_avss_2)/2
+
+Mu_avss <- mean(sample_avss)
+Diff_avss <- true_integral_1b - Mu_avss
+SE_avss <- sd(sample_avss)/sqrt(n)
+
+rbind(Mu_avss, Diff_avss, SE_avss)
+```
+
+```{r}
+improve_SS <- (EstIntegral_mc - Mu_avss)/EstIntegral_mc
+improve_SS
+```
+
+The following table shows the comparison between different methods:
+```{r echo=FALSE}
+df_1b<-data.frame(
+  Method=c("Ture Value_1b","MC_1b","AV_1b","SS_1b","AVSS_1b"),
+  Mean=c(true_integral_1b,EstIntegral_mc,EstIntegral_av,Mu_SS,Mu_avss),
+  Diff=c("NA",Diff_mc,Mean_diff_av,Diff_SS,Diff_avss),
+  Standar_error=c("NA",Std_Error_mc,Std_Error_av,SE_SS,SE_avss)
+)
+df_1b
+```
+Therefore, the antithetic variate reduction can reduce the variance by 75.8793%, and the difference between estimated mean and the true mean is the smallest. Therefore, the antithetic variate reduction is the best method to improve the accuracy.
 
 ## Question 2 
 ### (a)\
@@ -768,3 +1136,403 @@ legend('bottomright', legend = '45 degree reference line', col = 'red', lty = 1,
 
 Both the PDF plot and the Q-Q plot supports the argument that, under the suggested conditions, there is indeed vast similarity between the generated X and $N(\lambda, \sigma^2)$. However, one should notice that when $m$ is large, the rate of acceptance tends to be very low (in this case 8.99%), which implies a big waste of computational power. Consequently, there may not be sufficient data to strongly support the argument.\
 
+
+## Question 3
+
+### (a)
+
+A Bessel process $R_t$ of order $\delta \geq 1$ has the SDE:
+
+$$
+dR_t = \frac{\delta - 1}{2R_t} \, dt + dW_t, \quad R_0 = 1
+$$
+
+Consider the SDE for the squared Bessel process $Y_t = R_t^2$, by Itô's formula:
+
+$$
+dY_t = 2R_t \, dR_t + \frac{1}{2} \cdot 2 \, d[R]_t, \quad \text{where } d[R]_t = dt
+$$
+
+$$
+= 2R_t \left( \frac{\delta - 1}{2R_t} \, dt + dW_t \right) + dt
+$$
+
+$$
+= \delta \, dt + 2 \sqrt{Y_t} \, dW_t,  \quad dW_t \sim \sqrt{dt} \cdot \mathcal{N}(0, 1)
+$$
+
+$$
+Y_t = Y_0 + \int_0^t \delta \, ds + \int_0^t 2\sqrt{Y_s} \, dW_s, \quad Y_0 = R_0^2 = 1
+$$
+
+Check:
+
+$$
+\mathbb{E}(Y_t) = Y_0 + \delta t, \quad \text{since } \mathbb{E} \left( \int_0^t 2\sqrt{Y_s} \, dW_s \right) = 0
+$$
+
+
+```{r}
+set.seed(1)
+T = 10
+N = 1000
+dt = T/N
+Rt_sim <- function(delta, N, dt){
+  Y <- numeric(N+1)
+  Y[1] <- 1
+  for (i in 1:N){
+    dW <- sqrt(dt)*rnorm(1)
+    Y[i+1] <- max(Y[i] + delta*dt+ 2*sqrt(Y[i])*dW, 0)
+  } 
+  return(sqrt(Y))
+}
+t <- seq(0, T, by = dt)
+delta <- c(1,2,3,4)
+Rt1 <- Rt_sim(delta[1], N=1000, dt=10/1000)
+Rt2 <- Rt_sim(delta[2], N=1000, dt=10/1000)
+Rt3 <- Rt_sim(delta[3], N=1000, dt=10/1000)
+Rt4 <- Rt_sim(delta[4], N=1000, dt=10/1000)
+ymin <- min(c(Rt1, Rt2, Rt3, Rt4))
+ymax <- max(c(Rt1, Rt2, Rt3, Rt4))
+plot(t, Rt1, "l", col = "yellow", ylim = c(ymin, ymax), main = "Sample Paths of Bessel Process", xlab = "Time t", ylab = expression(R[t]))
+lines(t, Rt2, "l", col="red")
+lines(t, Rt3, "l", col="blue")
+lines(t, Rt4, "l", col="green")
+legend("topleft",
+       legend = c(expression(delta *' = 1'), expression(delta *' = 2'), expression(delta *' = 3'), expression(delta *' = 4')),
+       col = c("yellow", "red", "blue", "green"),
+       lty = 1)  
+```
+
+### (b)
+
+Generate more paths over $t \in [0, 10]$ with $\delta=1$:
+
+```{r}
+set.seed(1)
+M <- 100  # Number of sample paths
+t <- seq(0, T, by = dt)
+# choose delta = 1, generate more paths
+Rt_matrix <- sapply(1:M, function(m) Rt_sim(delta[1], N, dt)) # row: dt, col: Rt
+matplot(t, Rt_matrix, type = "l", lty = 1, col = rainbow(M),
+        main = "Sample Paths of Bessel Process (δ = 1)",
+        xlab = "Time t", ylab = expression(R[t]))
+```
+
+Simulate the maximum for each path and calculate the mean of this maximum:
+
+```{r}
+max_Rt <- apply(Rt_matrix, 2, max) # calculate maximum for each column of Rt_matrix
+hist(max_Rt, breaks = 20, prob = T, 
+     main = expression("Histogram of Max " * R[t] * " over [0,10] (δ = 1)"), 
+     xlab = expression("Max " * R[t]))
+mean(max_Rt)
+legend("topright", legend = "mean = 3.812538")
+```
+
+### (c)
+
+Consider a Bermudan call option with the following characteristics:
+
+- Underlying stock price: $R_t$, a Bessel process with order $\delta = 1.2$
+- Strike price: $K = 2$
+- Maturity: $T = 10$
+- Exercisable at discrete times: $t_k = k$, for $k = 1, 2, \dots, 10$
+- Exercise time: $\tau$ is a stopping time chosen from $\{t_1, t_2, \dots, t_{10}\}$
+- Payoff at exercise: $(R_\tau - K)^+ = \max(R_\tau - K, 0)$
+
+First, generate sample paths for stock price $R_t$ with $\delta=1.2$.
+
+```{r}
+set.seed(1)
+delta = 1.2
+K = 2
+T = 10
+M <- 100  # Number of sample paths
+t <- seq(0, T, by = dt)
+Rt_matrix <- sapply(1:M, function(m) Rt_sim(delta, N, dt)) # rows: t, cols: the mth path of Rt
+matplot(t, Rt_matrix, type = "l", lty = 1, col = rainbow(M),
+        main = "Sample Paths of Bessel Process (δ = 1.2)",
+        xlab = "Time t", ylab = expression(R[t]))
+```
+
+Second, construct a payoff matrix for exercisable dates.
+The option will be exercised when the highest payoff is reached. Assign these values to the exercise time $\tau$.
+
+```{r}
+tk_index <- (1:10)/(10/1000) + 1
+Rtk <- Rt_matrix[tk_index, ]  # rows: tk, cols: the mth path of Rt
+tk_payoff <- pmax(Rtk - K, 0)  # (Rt - K)+
+exercise_time <- apply(tk_payoff, 2, function(payoffs) {
+  idx <- which.max(payoffs)  # highest positive payoff
+  if (is.na(idx)) return(NA)   # never exercised
+  return(idx)  # tk index 1:10
+})
+# Convert index to actual time τ
+tau <- ifelse(is.na(exercise_time), NA, exercise_time)  # τ in 1:10
+hist(tau, prob = T, breaks = 20)
+lines(density(tau[!is.na(tau)]))
+summary(tau) # median = 8, mean = 6.89
+```
+
+In conclusion, the result(median=8,mean=6.89) shows that there are no incentives to exercise early. Since there are no discounting factors, most options are exercised close to maturity.
+
+### (d)
+
+Assuming no discounting factor, i.e. $r=0$ thus $e^{-rt}=1$, the pricing formula of the Bermuda call option is $E(max((R_{t_{i}}-K)^+, E(V_{i+1}|Fi)))$, where $V_{i+1}$ is the future value. Hence this is equivalent to find the maximum value of the payoffs all through the exercisable times, i.e. $max((R_{t_1}-K)^+,..., (R_{t_{10}}-K)^+)$
+
+```{r}
+Bermuda_payoffs <- sapply(1:M, function(m) {
+  payoffs <- tk_payoff[, m]
+  holding_values <- numeric(10)
+  holding_values[10] <- payoffs[10]
+  for (t in 9:1) {
+    if (payoffs[t] > 0) {
+      immediate_exercise <- payoffs[t]
+      future_payoff <- holding_values[t + 1]
+      holding_values[t] <- max(immediate_exercise, future_payoff)
+    } else {
+      holding_values[t] <- holding_values[t + 1]
+    }
+  }
+  return(holding_values[1])
+})
+Bermuda_price <- mean(Bermuda_payoffs)
+cat("Bermuda call price =", Bermuda_price, "\n")
+```
+
+The European call option price $= E((R_{10} - K)^+)$.
+
+```{r}
+# European call option price = E((R10-K)+)
+European_payoff <- tk_payoff[10,]
+European_price <- mean(European_payoff)
+cat("European call price =", European_price, "\n")
+```
+
+Calculate how much more expensive the Bermuda call option is than a European
+call option:
+
+```{r}
+diff_price = Bermuda_price - European_price
+cat("Extra cost of Bermuda over European =", diff_price, "\n")
+```
+
+### (e)
+
+#### (1) No proper modeling of expected future values:
+We used a single “average of future payoffs” or just “the next time step’s payoff,” which might be a coarse approximation.
+The more accurate method in continuous models is to do a regression across all paths’ next‐step (or multiple‐step) payoffs on the underlying Rt.
+
+#### (2) Assumption of the discouting factor is not realistic:
+In real-world financial markets, option pricing typically incorporates a positive risk-free interest rate $r > 0$, leading to exponential discounts of future payoffs. 
+
+When discounting is present, the option value at an exercise time $t_i$ is given by:
+
+$$
+V_i = \max\left( (R_{t_i} - K)^+, \ e^{-r \Delta t} \cdot \mathbb{E}[V_{i+1} \mid \mathcal{F}_{t_i}] \right)
+$$
+
+The second term represents the discounted expected continuation value, where $\Delta t$ is the time between exercise opportunities, and $ \mathcal{F}_{t_i} $ denotes the available information at time $t_i$.
+
+In contrast to a zero-interest-rate setting where the continuation value is not discounted, a positive $r$ reduces the present value of waiting. This provides a stronger incentive for early exercise and typically increases the premium of the Bermuda option over its European counterpart.
+
+#### (3) Limited number of paths:
+If the number of paths is relatively small (e.g. we use M=100 in this case), the variance of the estimator might be high.
+Checking for confidence intervals or repeating with a bigger M can highlight whether results have converged.
+
+#### (4) Issues arising from the direct simulation of Rt:
+
+$$
+    R_t \to 0 \quad \Rightarrow \quad Y_t = R_t^2 \to 0
+$$ 
+To avoid taking the square root of negative values when simulating $R_t = \sqrt{Y_t}$, we applied a non-negativity constraint in the simulation of $Y_t$:
+
+$$
+Y_{i+1} = \max\left( Y_i + \delta \cdot \Delta t + 2 \sqrt{Y_i} \cdot \Delta W_i,\ 0 \right)
+$$
+
+This ensures that $Y_t \geq 0$, so that $R_t = \sqrt{Y_t}$ is always real-valued.
+
+#### (5) Variance Reduction:
+
+Control Variate Method:
+
+The price of the Bermuda call option is equal to $max((R_{t_1}-K)^+,..., (R_{t_{10}}-K)^+)$, which is equivalent to $max(max(R_t)-K,\ 0)$. 
+
+Let $X = max(max(R_t)-K,\ 0), \ for\ t=1,2,...,10$. Set $\tilde{X} = max(R_t)-K$, where we can use similar method in (b) to calculate $max(R_t)$, then $Y = \tilde{X} - E(\tilde{X})$. Check: $E(Y) = 0$.
+
+```{r}
+max_Rtk <- apply(Rtk, 2, max)
+X_tilde = max_Rtk - K
+X = pmax(X_tilde, 0)
+Y = X_tilde - mean(X_tilde)
+mean(Y) # check E(Y)=0
+```
+
+Calculate $c=-\frac{Cov(X,Y)}{Var(Y)}$:
+
+```{r}
+c <- -cov(X,Y)/var(Y)
+c
+```
+
+Then $\hat{\theta}=X + cY$, calculate $Var(\hat{\theta})$ and compare it to $Var(X)$:
+```{r}
+theta_hat = X + c*Y
+cat(var(X), var(theta_hat), "\n",  
+    "Improved by",round((var(X)-var(theta_hat))/var(X) * 100, digits = 2), "%.")
+```
+
+Other attempts for variance reduction:
+
+1. Antithetic Variates Method: unavailable since $R_t$ is not a monotone function.
+2. Stratify Sampling: unavailable since an inverse transformed estimator is needed.
+3. Conditioning Sampling: unavailable since $R_t$ is the only variable.
+4. Importance Sampling: unavailable since the distribution of $R_t$ is not given.
+
+
+
+## Question 4
+
+### (a)
+
+First, we create a function that models one game and builds a deck with numbers 1-8 (with four numbers repeated).
+Then, we randomly deal 4 cards to each player.
+The player who has the lowest sum will be the winner of the game.
+
+```{r}
+sim_game <- function() {
+  nums <- 1:8
+  repeat_nums <- sample(nums, size=4, replace = FALSE)
+  my_deck <- c(nums, repeat_nums)
+  
+  # Draw cards without replacement
+  cards_drawn <- sample(my_deck, size=8, replace = FALSE)
+  
+  # Split cards between players
+  player1_cards <- cards_drawn[1:4]
+  player2_cards <- cards_drawn[5:8]
+  
+  # Find totals
+  p1_total <- sum(player1_cards)
+  p2_total <- sum(player2_cards)
+  
+  # Figure out who wins and calculate payoff
+  result <- sign(p2_total - p1_total)
+  
+  if (result > 0) {  # Player 1 wins
+    pay <- min(player1_cards)
+    return(c(pay, -pay))
+  } else if (result < 0) {  # Player 2 wins
+    pay <- min(player2_cards)
+    return(c(-pay, pay))
+  } else {  # Nobody wins 
+    return(c(0, 0))
+  }
+}
+
+# Run simulation 100,000 times
+set.seed(42)
+sims <- 100000
+all_results <- matrix(0, nrow = sims, ncol = 2)
+for (i in 1:sims) all_results[i,] <- sim_game()
+
+# Find unique outcomes for histograms
+p1_outcomes <- sort(unique(all_results[,1]))
+p2_outcomes <- sort(unique(all_results[,2]))
+
+# Make histograms
+par(mfrow = c(2, 1), mar = c(4, 4, 2, 1))
+hist(all_results[,1], breaks = p1_outcomes, prob = TRUE, 
+     main = "Player 1 Payoffs", xlab = "Amount")
+hist(all_results[,2], breaks = p2_outcomes, prob = TRUE, 
+     main = "Player 2 Payoffs", xlab = "Amount")
+
+# Calculate expected values
+avg_p1 <- mean(all_results[,1])
+avg_p2 <- mean(all_results[,2])
+cat("\nPlayer 1 expected value:", round(avg_p1, 4))
+cat("\nPlayer 2 expected value:", round(avg_p2, 4))
+```
+
+Conclusion: 
+The payoff distributions for both players are mirror images of each other.\
+The most common outcomes are -1, 0, 1, and 2, with less frequent outcomes at -3, -2, 3, and 4.\ 
+The expected values (Player 1: -0.0077, Player 2: 0.0077) are essentially zero.\ 
+The game appears to be fair, with neither player having a significant advantage.\ 
+Ties (payoff of 0) occur frequently, as shown by the peak at 0 in both histograms. 
+
+### (b) 
+```{r}
+# Create new function where Player 1 always gets their chosen card
+sim_game_modified <- function(chosen) {
+  nums <- 1:8
+  repeat_nums <- sample(nums, size=4, replace = FALSE)
+  my_deck <- c(nums, repeat_nums)
+  
+  # Player 1 gets chosen card plus 3 random cards
+  # Player 2 gets 4 random cards
+  if (chosen %in% my_deck) {
+    idx <- which(my_deck == chosen)[1]
+    my_deck <- my_deck[-idx]
+  } else {
+    return(sim_game_modified(chosen))
+  }
+  
+  cards_drawn <- sample(my_deck, size=7, replace = FALSE)
+  player1_cards <- c(chosen, cards_drawn[1:3])
+  player2_cards <- cards_drawn[4:7]
+  
+  p1_total <- sum(player1_cards)
+  p2_total <- sum(player2_cards)
+  
+  if (p1_total < p2_total) {
+    pay <- min(player1_cards)
+    return(c(pay, -pay))
+  } else if (p2_total < p1_total) {
+    pay <- min(player2_cards)
+    return(c(-pay, pay))
+  } else {
+    return(c(0, 0))
+  }
+}
+
+# Test each possible card choice (1-8) with 50,000 simulations
+set.seed(42)
+sims <- 50000
+card_choices <- 1:8
+choice_results <- matrix(0, nrow = 8, ncol = 2)
+colnames(choice_results) <- c("Exp Value", "Win %")
+
+for (i in 1:8) {
+  test_results <- matrix(0, nrow = sims, ncol = 2)
+  for (j in 1:sims) test_results[j,] <- sim_game_modified(i)
+  
+  choice_results[i,] <- c(
+    mean(test_results[,1]),
+    mean(test_results[,1] > 0) * 100
+  )
+}
+
+# Print results
+cat("\nCard choice results (Expected Value, Win %):")
+for (i in 1:8) {
+  cat("\nCard", i, ":", round(choice_results[i,1], 4), 
+      ", ", round(choice_results[i,2], 1), "%")
+}
+
+best <- which.max(choice_results[,1])
+cat("\n\nBest choice for Player 1: Card", best)
+cat("\nThis gives expected value of", round(choice_results[best,1], 4), "per game")
+cat("\nThe fair game had expected value around 0, so this is definitely better")
+```
+
+Conclusion: \
+The player A should choose card 2.
+It gives the highest expected value of payoff equal to 0.518 per game. \
+While choosing card 1 offers the highest win probability (70.9%), it only yields an expected value of payoff equal to 0.294. \
+Card 2 provides a better balance of win probability (63.4%) and higher payoff when winning. \
+As card numbers increase, both expected values of payoff and win probabilities decrease steadily. \
+
+Player A now has a significant advantage.
