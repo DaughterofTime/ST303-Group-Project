@@ -1411,21 +1411,21 @@ sim_game <- function() {
   cards_drawn <- sample(my_deck, size=8, replace = FALSE)
   
   # Split cards between players
-  player1_cards <- cards_drawn[1:4]
-  player2_cards <- cards_drawn[5:8]
+  playerA_cards <- cards_drawn[1:4]
+  playerB_cards <- cards_drawn[5:8]
   
   # Find totals
-  p1_total <- sum(player1_cards)
-  p2_total <- sum(player2_cards)
+  pA_total <- sum(playerA_cards)
+  pB_total <- sum(playerB_cards)
   
   # Figure out who wins and calculate payoff
-  result <- sign(p2_total - p1_total)
+  result <- sign(pB_total - pA_total)
   
-  if (result > 0) {  # Player 1 wins
-    pay <- min(player1_cards)
+  if (result > 0) {  # Player A wins
+    pay <- min(playerA_cards)
     return(c(pay, -pay))
-  } else if (result < 0) {  # Player 2 wins
-    pay <- min(player2_cards)
+  } else if (result < 0) {  # Player B wins
+    pay <- min(playerB_cards)
     return(c(-pay, pay))
   } else {  # Nobody wins 
     return(c(0, 0))
@@ -1439,40 +1439,40 @@ all_results <- matrix(0, nrow = sims, ncol = 2)
 for (i in 1:sims) all_results[i,] <- sim_game()
 
 # Find unique outcomes for histograms
-p1_outcomes <- sort(unique(all_results[,1]))
-p2_outcomes <- sort(unique(all_results[,2]))
+pA_outcomes <- sort(unique(all_results[,1]))
+pB_outcomes <- sort(unique(all_results[,2]))
 
 # Make histograms
 par(mfrow = c(2, 1), mar = c(4, 4, 2, 1))
-hist(all_results[,1], breaks = p1_outcomes, prob = TRUE, 
-     main = "Player 1 Payoffs", xlab = "Amount")
-hist(all_results[,2], breaks = p2_outcomes, prob = TRUE, 
-     main = "Player 2 Payoffs", xlab = "Amount")
+hist(all_results[,1], breaks = pA_outcomes, prob = TRUE, 
+     main = "Player A Payoffs", xlab = "Amount")
+hist(all_results[,2], breaks = pB_outcomes, prob = TRUE, 
+     main = "Player B Payoffs", xlab = "Amount")
 
 # Calculate expected values
-avg_p1 <- mean(all_results[,1])
-avg_p2 <- mean(all_results[,2])
-cat("\nPlayer 1 expected value:", round(avg_p1, 4))
-cat("\nPlayer 2 expected value:", round(avg_p2, 4))
+avg_pA <- mean(all_results[,1])
+avg_pB <- mean(all_results[,2])
+cat("\nPlayer A expected value:", round(avg_pA, 4))
+cat("\nPlayer B expected value:", round(avg_pB, 4))
 ```
 
 Conclusion: 
 The payoff distributions for both players are mirror images of each other.\
 The most common outcomes are -1, 0, 1, and 2, with less frequent outcomes at -3, -2, 3, and 4.\ 
-The expected values (Player 1: -0.0077, Player 2: 0.0077) are essentially zero.\ 
+The expected values (Player A: -0.0077, Player B: 0.0077) are essentially zero.\ 
 The game appears to be fair, with neither player having a significant advantage.\ 
 Ties (payoff of 0) occur frequently, as shown by the peak at 0 in both histograms. 
 
 ### (b) 
 ```{r}
-# Create new function where Player 1 always gets their chosen card
+# Create new function where Player A always gets their chosen card
 sim_game_modified <- function(chosen) {
   nums <- 1:8
   repeat_nums <- sample(nums, size=4, replace = FALSE)
   my_deck <- c(nums, repeat_nums)
   
-  # Player 1 gets chosen card plus 3 random cards
-  # Player 2 gets 4 random cards
+  # Player A gets chosen card plus 3 random cards
+  # Player B gets 4 random cards
   if (chosen %in% my_deck) {
     idx <- which(my_deck == chosen)[1]
     my_deck <- my_deck[-idx]
@@ -1481,17 +1481,17 @@ sim_game_modified <- function(chosen) {
   }
   
   cards_drawn <- sample(my_deck, size=7, replace = FALSE)
-  player1_cards <- c(chosen, cards_drawn[1:3])
-  player2_cards <- cards_drawn[4:7]
+  playerA_cards <- c(chosen, cards_drawn[1:3])
+  playerB_cards <- cards_drawn[4:7]
   
-  p1_total <- sum(player1_cards)
-  p2_total <- sum(player2_cards)
+  pA_total <- sum(playerA_cards)
+  pB_total <- sum(playerB_cards)
   
-  if (p1_total < p2_total) {
-    pay <- min(player1_cards)
+  if (pA_total < pB_total) {
+    pay <- min(playerA_cards)
     return(c(pay, -pay))
-  } else if (p2_total < p1_total) {
-    pay <- min(player2_cards)
+  } else if (pB_total < pA_total) {
+    pay <- min(playerB_cards)
     return(c(-pay, pay))
   } else {
     return(c(0, 0))
@@ -1523,7 +1523,7 @@ for (i in 1:8) {
 }
 
 best <- which.max(choice_results[,1])
-cat("\n\nBest choice for Player 1: Card", best)
+cat("\n\nBest choice for Player A: Card", best)
 cat("\nThis gives expected value of", round(choice_results[best,1], 4), "per game")
 cat("\nThe fair game had expected value around 0, so this is definitely better")
 ```
