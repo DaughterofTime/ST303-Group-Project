@@ -6,6 +6,9 @@ date: "2025-04-10"
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(ggplot2)
+library(gridExtra)
 ```
 
 # Question 1
@@ -381,6 +384,757 @@ df_1b
 ```
 Therefore, the antithetic variate reduction can reduce the variance by 75.8793%, and the difference between estimated mean and the true mean is the smallest. Therefore, the antithetic variate reduction is the best method to improve the accuracy.
 
+## Question 2 
+### (a)\
+We generate 10 values for each of the parameters $m$, $\nu$, $\lambda$, $\alpha$, based on the conditions on their values specified in the question. They are shuffled so that $10^4 = 10000$ distinct sets of parameters are created. \
+```{r}
+m_list <- seq(1.6, 10, length.out = 10)
+nu_list <- seq(-5, 5, length.out = 10)
+lambda_list <- seq(-5, 5, length.out = 10)
+alpha_list <- seq(0.1, 10, length.out = 10)
+
+groups <- expand.grid(m_list, nu_list, lambda_list, alpha_list)
+
+m <- groups$Var1
+nu <- groups$Var2
+lambda <- groups$Var3
+alpha <- groups$Var4
+```
+
+We also calculate the theoretical mean and variance for each set of parameters using the formula from part (b): \
+```{r}
+theoretical_mean <- lambda - alpha*nu/(2*(m - 1))
+theoretical_var <- alpha^2/(2*m - 3) * (1 + nu^2/(4*(m - 1)^2))
+```
+
+Next, we create a dataframe summarising all information about the future simulated datasets, which is called `Q2_summary`. This dataframe has 10000 rows, each row representing the information of one set of parameters generated before. \
+Later, we will run R codes across all sets of parameters to get the **sample mean**, **sample variance** and **empirical acceptance rate** for each envelope function and each set of parameters. These numbers will be integrated into `Q2_summary` dataframe as new columns so that we can compare the performance of different envelope functions later.\
+
+```{r}
+Q2_summary <- data.frame(m, nu, lambda, alpha, 
+                         theoretical_mean, theoretical_var)
+head(Q2_summary)
+```
+
+
+With transformation \
+$$
+y = \tan^{-1}(\frac{x - \lambda}{\alpha}), y \in [-\frac{\pi}{2}, \frac{\pi}{2}]
+$$
+We get \
+$$
+f(y) \propto (\cos(y))^{2m}e^{-\nu y}
+$$
+and we are able to derive three envelop functions from that: \
+**Envelope function 1** - this is essentially a uniform distribution \
+$$
+g(y)=\frac{1}{\pi}
+$$
+
+**Envelope function 2** \
+$$
+g(y)\propto e^{-\nu y}
+$$
+**Envelope function 3** \
+$$
+g(y)\propto\cos(y)
+$$
+
+We can derive two more envelope functions from the original form of the target function, i.e.
+$$
+f(x) \propto \left[ 1 + (\frac{x - \lambda}{\alpha})\right]^{-m} e^{-\nu\ arctan(\frac{x - \lambda}{\alpha})}
+$$
+
+**Envelope function 4** - after writing it down, we noticed that this is essentially a Cauchy distribution \
+$$
+g(y) \propto (1+(\frac{y-\lambda}{\alpha})^{2})^{-1}
+$$
+**Envelope function 5**
+$$
+g(y) \propto (1+(\frac{y-\lambda}{\alpha})^{2})^{-m}
+$$
+By setting $m = \frac{k+1}{2}$ and $z = \frac{\sqrt{k}(y - \lambda)}{\alpha}$, we transform it to a form similar to a t-distribution: \
+$$
+g(y) \propto (1+\frac{z^{2}}{k})^{-\frac{k+1}{2}}
+$$
+
+Unfortunately, due to the limit on number of pages, we are unable to explain every algorithm we wrote in R. We will elaborate on the best envelope function we picked later on, after the best envelope function is picked.\
+R will take approximately 12 minutes to run the codes for all 5 envelope functions. That is a reasonable efficiency for 10000 sets of parameters. \
+
+#### Codes for Envelope function 1 (uniform)
+```{r include=FALSE}
+# Generate Y
+set.seed(1)
+n <- 10^5
+Y <- runif(n) * pi - pi/2
+```
+
+```{r include=FALSE}
+# Generate the sample using AR
+set.seed(1)
+ptm <- proc.time()
+U <- runif(n)
+
+sample_envelope_1 <- lapply(1:length(nu), function(i) {
+  m <- m[i]
+  nu <- nu[i]
+  
+  temp <- atan(-nu / (2 * m))
+  accepted_Y <- Y[U < 
+    (cos(Y))^(2 * m) * exp(-nu * Y) / (cos(temp)^(2 * m) * exp(-nu * temp))]
+})
+sim_envelope_1 <- (proc.time()- ptm)[3]
+```
+
+```{r include=FALSE}
+# Produce X, and check mean and variance
+X_envelope_1 <- lapply(1:length(nu), function(i){tan(sample_envelope_1[[i]]) * alpha[i] + lambda[i]})
+# X_envelope_1[[1]][1:10]
+# sample_envelope_1[[1]][1:10]
+
+envelop_1_empirical_mean <- unlist(lapply(1:length(nu), function(i) mean(X_envelope_1[[i]])))
+envelop_1_empirical_var <- unlist(lapply(1:length(nu), function(i) var(X_envelope_1[[i]])))
+```
+
+
+```{r include=FALSE}
+# empirical rate of acceptance
+envelope_1_empirical_acceptance <- unlist(lapply(1:length(nu), function(i) length(sample_envelope_1[[i]])/10^5))
+```
+
+```{r include=FALSE}
+# add the results to the summary
+library(tidyverse)
+Q2_summary <- Q2_summary %>% 
+  mutate(envelop_1_empirical_mean, envelop_1_empirical_var, envelope_1_empirical_acceptance)
+
+Q2_summary
+```
+
+#### Codes for Envelope function 2 (exponential)
+Envelope function 2 is not a practical choice, as it will collapse every time $m$ becomes a decimal. That's why all the codes below are hashtaged.
+
+$$
+g(y) = \frac{\nu e^{-\nu y}}{e^{\frac{\pi}{2}\nu} - e^{-\frac{\pi}{2}\nu}}
+$$
+
+To generate Y, use inverse transform algorithm:
+$$
+F^{-1}(U) = -\frac{1}{2}log[U \times (e^{\frac{-\pi}{2}\nu} - e^{\frac{\pi}{2}\nu}) + e^{\frac{\pi}{2}\nu}]
+$$
+
+```{r}
+# # Generate Y
+# n <- 10^5
+# U <- runif(n)
+# 
+# Y <- lapply(1:length(nu), function(i){-0.5*log(U*(exp(-pi/2 * nu[i]) - exp(pi/2 * nu[i])) + exp(pi/2 * nu[i]))})
+```
+
+```{r}
+# Generate the sample using AR
+# U <- runif(n)
+# 
+# sample_envelope_2 <- lapply(1:length(nu), function(i){
+#   Y[[i]][U < (cos(Y[[i]]))^{2*m[i]}]
+# })
+```
+
+```{r}
+# Produce X, and check mean and variance
+# X_envelope_2 <- lapply(1:length(nu), function(i) tan(sample_envelope_2[[i]]) * alpha[i] + lambda[i])
+# 
+# envelop_2_empirical_mean <- unlist(lapply(1:length(nu), function(i) mean(X_envelope_2[[i]])))
+# envelop_2_empirical_var <- unlist(lapply(1:length(nu), function(i) var(X_envelope_2[[i]])))
+```
+
+```{r}
+# # empirical rate of acceptance
+# envelope_2_empirical_acceptance <- unlist(lapply(1:length(nu), function(i) length(sample_envelope_2[[i]])/10^5))
+# ```
+# ```{r}
+# # update Q2_summary
+# Q2_summary <- Q2_summary %>% 
+#   mutate(envelop_2_empirical_mean, envelop_2_empirical_var, envelope_2_empirical_acceptance)
+# 
+# Q2_summary
+```
+
+
+#### Codes for Envelope function 3 (cosine)
+$$
+g(y) = \frac{1}{2}cos(y)
+$$
+
+To generate Y, use inverse transform algorithm:
+$$
+F^{-1}(U) = sin^{-1}(2U - 1)
+$$
+
+```{r include=FALSE}
+# Generate Y
+set.seed(1)
+n <- 10^5
+U <- runif(n)
+
+Y <- asin(2*U-1)
+```
+
+```{r include=FALSE}
+# Generate the sample using AR
+set.seed(1)
+ptm <- proc.time()
+U <- runif(n)
+
+temp <- atan(-nu/(2*m-1))
+
+sample_envelope_3 <- lapply(1:length(nu), function(i){
+  temp <- temp[i]
+  m <- m[i]
+  nu <- nu[i]
+  
+  Y[U < (cos(Y)^{2*m-1}*exp(-nu*Y))/(cos(temp)^{2*m-1}*exp(-nu*temp))]
+})
+sim_envelope_3 <- (proc.time()- ptm)[3]
+```
+
+```{r include=FALSE}
+# Produce X, and check mean and variance
+X_envelope_3 <- lapply(1:length(nu), function(i) tan(sample_envelope_3[[i]]) * alpha[i] + lambda[i])
+
+envelop_3_empirical_mean <- unlist(lapply(1:length(nu), function(i) mean(X_envelope_3[[i]])))
+envelop_3_empirical_var <- unlist(lapply(1:length(nu), function(i) var(X_envelope_3[[i]])))
+```
+
+```{r include=FALSE}
+# empirical rate of acceptance
+envelope_3_empirical_acceptance <- unlist(lapply(1:length(nu), function(i) length(sample_envelope_3[[i]])/10^5))
+```
+
+```{r include=FALSE}
+# update Q2_summary
+Q2_summary <- Q2_summary %>% 
+  mutate(envelop_3_empirical_mean, envelop_3_empirical_var, envelope_3_empirical_acceptance)
+Q2_summary
+```
+
+#### Codes for Envelope function 4 (Cauchy)
+$$
+g(y) \propto (1+(\frac{y-\lambda}{\alpha})^{2})^{-1}
+$$
+With inverse transform algorithm, we get
+$$
+F^{-1}(U) = \alpha\times  tan(\pi U - \frac{\pi}{2}) + \lambda
+$$
+
+```{r include=FALSE}
+# Generate Y
+set.seed(1)
+n <- 10^5
+Y <- lapply(1:length(nu), function(i) alpha[i] * tan(pi*runif(n) - pi/2) + lambda[i])
+```
+
+```{r include=FALSE}
+# Generate the sample using AR
+set.seed(1)
+ptm <- proc.time()
+U <- runif(n)
+
+temp_1 <- lapply(1:length(nu), function(i) (Y[[i]] - lambda[i])/alpha[i])
+temp_2 <- nu/(2*(1 - m))
+
+sample_envelope_4 <- lapply(1:length(nu), function(i){
+  Y <- Y[[i]]
+  temp_1 <- temp_1[[i]]
+  temp_2 <- temp_2[i]
+  nu <- nu[i]
+  m <- m[i]
+  
+  Y[U < ((1 + temp_1^2)^{-m} * exp(-nu * atan(temp_1)))/((1 + temp_2^2)^{1-m} * exp(-nu*atan(temp_2)))]
+})
+sim_envelope_4 <- (proc.time()- ptm)[3]
+```
+
+```{r include=FALSE}
+# Produce X, and check mean and variance
+X_envelope_4 <- sample_envelope_4
+
+envelop_4_empirical_mean <- unlist(lapply(1:length(nu), function(i) mean(X_envelope_4[[i]])))
+envelop_4_empirical_var <- unlist(lapply(1:length(nu), function(i) var(X_envelope_4[[i]])))
+```
+
+```{r include=FALSE}
+# empirical rate of acceptance
+envelope_4_empirical_acceptance <- unlist(lapply(1:length(nu), function(i) length(sample_envelope_4[[i]])/10^5))
+```
+
+```{r include=FALSE}
+# update summary_Q2
+Q2_summary <- Q2_summary %>% 
+  mutate(envelop_4_empirical_mean, envelop_4_empirical_var, envelope_4_empirical_acceptance)
+```
+
+
+#### Codes for Envelope function 5 (t distribution)
+Our envelope function is \
+$$
+g(y) \propto (1+(\frac{y-\lambda}{\alpha})^{2})^{-m}
+$$
+We found it hard to find the exact expression of a constant that allows it to integrate to one (i.e. make it a PDF). \
+We solved this problem by getting some inspirations from the PDF of t-distribution, i.e. $f(y) \propto (1+\frac{y^{2}}{k})^{-\frac{k+1}{2}}$. We transformed $g(y)$ to the following t-distribution form by setting $m = \frac{k+1}{2}$ and $z = \frac{\sqrt{k}(y - \lambda)}{\alpha}$: \
+$$
+g(y) \propto (1+\frac{z^{2}}{k})^{-\frac{k+1}{2}}
+$$
+As a result, we are able to simulate $Y$ indirectly by \
+Step 1: Simulate a $Z$ from the built-in t-distribution function `rt` \
+Step 2: Transform $Z$ to $Y$ by using $Y = Z \frac{\alpha}{\sqrt{k}} + \lambda$ \
+```{r include=FALSE}
+# Generate Y
+set.seed(1)
+n <- 10^5
+k <- 2*m - 1
+
+Y <- lapply(1:length(nu), function(i){
+  rt(n, df = k[i]) * alpha[i]/sqrt(k[i]) + lambda[i]
+})
+```
+
+```{r include=FALSE}
+# Generate the sample using AR
+set.seed(1)
+ptm <- proc.time()
+U <- runif(n)
+
+sample_envelope_5 <- lapply(1:length(nu), function(i){
+  Y <- Y[[i]]
+  nu <- nu[i]
+  lambda <- lambda[i]
+  alpha <- alpha[i]
+  
+  Y[U < exp(-nu*atan((Y - lambda)/alpha) - abs(nu)*pi/2)]
+})
+sim_envelope_5 <- (proc.time()- ptm)[3]
+```
+
+```{r include=FALSE}
+# Check mean and variance
+X_envelope_5 <- sample_envelope_5
+
+envelop_5_empirical_mean <- unlist(lapply(1:length(nu), function(i) mean(X_envelope_5[[i]])))
+envelop_5_empirical_var <- unlist(lapply(1:length(nu), function(i) var(X_envelope_5[[i]])))
+```
+
+```{r include=FALSE}
+# empirical rate of acceptance
+envelope_5_empirical_acceptance <- unlist(lapply(1:length(nu), function(i) length(sample_envelope_5[[i]])/10^5))
+```
+
+```{r include=FALSE}
+# update summary_Q2
+Q2_summary <- Q2_summary %>% 
+  mutate(envelop_5_empirical_mean, envelop_5_empirical_var, envelope_5_empirical_acceptance)
+```
+
+
+
+### Pick the best envelope function \
+When writing the codes, we noticed that envelope function 2 is not a practical choice, as it will collapse every time $m$ becomes a decimal. Hence, we kicked it out from the further analysis of performances. \
+
+To pick the best envelope function, we compare **a)** the empirical rate of acceptance and **b)** the time of running the acceptance-rejection algorithm. \
+
+We summarise the empirical rate of acceptance of these envelope function in the boxplot below: \
+```{r echo=FALSE}
+Q2_summary_acceptance <- Q2_summary %>%
+  select(m, nu, lambda, alpha, envelope_1 = envelope_1_empirical_acceptance, envelope_3 = envelope_3_empirical_acceptance, envelope_4 = envelope_4_empirical_acceptance, envelope_5 = envelope_5_empirical_acceptance)
+
+df_long <- pivot_longer(Q2_summary_acceptance[, 5:ncol(Q2_summary_acceptance)], cols = everything(), names_to = "Envelope", values_to = "Acceptance")
+
+# Plot
+ggplot(df_long, aes(x = Envelope, y = Acceptance, fill = Envelope)) +
+  geom_boxplot() +
+  theme_minimal() + 
+  theme(legend.position = "none") +
+  labs(x = 'Envelope Function', y = 'Empirical Acceptance Rate', title = 'Compare the Performance of Different Envelope Functions')
+```
+
+We summarised the time consumed to run different algorithms in the following table: \
+```{r echo=FALSE}
+rbind(sim_envelope_1, sim_envelope_3, sim_envelope_4, sim_envelope_5)
+```
+
+We can see that generally, envelope 3 has significantly better acceptance rates than the others, while it has relatively good computational efficiency. Thus, pick envelope 3 as our envelope function. \
+
+Below is extra details about the algorithm we used for envelope 3: \
+With transformation $y = arctan(\frac{x - \lambda}{\alpha})$, we have \
+$$
+f(y) \propto (\cos(y))^{2m}e^{-\nu y} \\
+g(y) = \frac{1}{2}\cos(y)
+$$
+
+$Y$ is generated by using inverse transform algorithm: \
+$$
+F^{-1}(U) = sin^{-1}(2U - 1)
+$$
+
+As we decided to pick it as our best envelope function, we need to perform variance reduction on it. Control variate method is used at this stage to reduce the variance of the sample $Y_{original}$ generated from $g(y)$. With $Y' = \frac{1}{2} - U$ being the zero-mean random variable, $Y = Y_{original} = cY'$ (where$c = - \frac{Cov(Y_{original}, Y')}{Var(Y')}$). This method reduced the variance by 89.88%.
+
+Accept the sample from the envelope function when \
+$$
+U < \frac{(cos(y))^{2m - 1} e^{-\nu y}}{\left[cos\left( arctan(-\frac{\nu}{2m-1})\right)\right] e^{-\nu \ arctan(-\frac{\nu}{2m-1})}}
+$$
+#### Envelope function 3 (cosine) with variance reduction
+```{r echo=TRUE}
+# Generate Y
+set.seed(1)
+n <- 10^5
+U <- runif(n)
+
+Y_original <- asin(2*U-1)
+SE_original <- sd(Y_original)/sqrt(n)
+```
+
+```{r echo=TRUE}
+# Control variate method
+set.seed(1)
+Y_prime <- 1/2 - U
+c <- -12*cov(Y_original, Y_prime) # 1/12 is the population variance of 1 - U
+Y <- Y_original + c*Y_prime
+SE_cv <- sd(Y)/sqrt(n)
+(SE_original - SE_cv)/SE_original # percentage of standard error improved
+```
+
+```{r echo=TRUE}
+# Generate the sample using AR
+set.seed(1)
+ptm <- proc.time()
+U <- runif(n)
+
+temp <- atan(-nu/(2*m-1))
+
+sample_envelope_3 <- lapply(1:length(nu), function(i){
+  temp <- temp[i]
+  m <- m[i]
+  nu <- nu[i]
+  
+  Y[U < (cos(Y)^{2*m-1}*exp(-nu*Y))/(cos(temp)^{2*m-1}*exp(-nu*temp))]
+})
+sim_envelope_3 <- (proc.time()- ptm)[3]
+```
+
+```{r echo=TRUE}
+# Produce X, and check mean and variance
+X_envelope_3 <- lapply(1:length(nu), function(i) tan(sample_envelope_3[[i]]) * alpha[i] + lambda[i])
+
+envelop_3_empirical_mean_cv <- unlist(lapply(1:length(nu), function(i) mean(X_envelope_3[[i]])))
+envelop_3_empirical_var_cv <- unlist(lapply(1:length(nu), function(i) var(X_envelope_3[[i]])))
+```
+
+As a result of the control variates method, the empirical acceptance rate of the envelope function 3 has been improved significantly: \
+```{r echo=TRUE}
+# empirical rate of acceptance
+envelope_3_empirical_acceptance_cv <- unlist(lapply(1:length(nu), function(i) length(sample_envelope_3[[i]])/10^5))
+summary(envelope_3_empirical_acceptance_cv)
+```
+
+```{r include=FALSE}
+# update Q2_summary
+Q2_summary <- Q2_summary %>% 
+  mutate(envelop_3_empirical_mean = envelop_3_empirical_mean_cv, envelop_3_empirical_var = envelop_3_empirical_var_cv, envelope_3_empirical_acceptance = envelope_3_empirical_acceptance_cv)
+```
+
+```{r}
+# update Q2_summary_acceptance
+Q2_summary_acceptance$envelope_3 <- envelope_3_empirical_acceptance_cv
+```
+
+
+The question also asks which values of parameters will give the most efficient simulation. We will answer this question here. \
+By analysing the information from the updated `Q2_summary` dataframe with `dplyr` package, we are able to observe that the rate of acceptance is not affected by either $\lambda$ or $\alpha$. Thus, check the relationship between rate of acceptance and $m$, $\nu$, using `ggplot2`: \
+
+```{r echo=FALSE}
+Q2_summary_acceptance_3 <- Q2_summary_acceptance %>%
+  select(m, nu, lambda, alpha, envelope_3) %>%
+  arrange(desc(envelope_3))
+```
+
+```{r include=FALSE}
+Q2_summary_acceptance_temp <- Q2_summary_acceptance_3 %>% 
+  mutate(m = round(m, digits = 3), nu = round(nu, digits = 3)) %>%
+  group_by(envelope_3) %>%
+  summarize(m = unique(m), nu = unique(nu)) %>%
+  arrange(desc(envelope_3))
+```
+
+```{r echo=FALSE}
+ggplot(Q2_summary_acceptance_temp, aes(x = m, y = envelope_3, col = factor(nu))) + 
+         geom_point(alpha = 0.5, size = 5) + 
+         theme_minimal() +
+         labs(y = 'Empirical Acceptance Rate', color = expression(nu), title = 'Empirical Acceptance Rates vs m')
+
+ggplot(Q2_summary_acceptance_temp, aes(x = nu, y = envelope_3, col = factor(m))) + 
+         geom_point(alpha = 0.5, size = 5) + 
+         theme_minimal() + 
+         labs(y = 'Empirical Acceptance Rate', x = expression(nu), color = 'm', title = expression('Empirical Acceptance Rates vs '*nu))
+```
+
+From the plot, we can see that the acceptance rate is highest when $m$ is small, **AND** $\nu$ is close to zero.
+
+### (b)
+We have already calculated the theoretical mean and variances when we defined `Q2_summary` early on. Now, we compare them with the sample mean and variances using the `dplyr` package, and the differences between them are plotted. 
+From the dataframe, we noticed that $\lambda$ has no effect on either the deviation from theoretical mean or the deviation from theoretical variances. Use plots to investigate the effects of other parameters:
+
+#### Analysis on mean
+```{r include=FALSE}
+Q2_summary_empirical_mean <- Q2_summary %>%
+  mutate(diff = envelop_3_empirical_mean - theoretical_mean) %>%
+  select(m, nu, lambda, alpha, diff) %>%
+  arrange(diff)
+
+Q2_summary_empirical_mean
+mean(Q2_summary_empirical_mean$diff) # the mean difference is very small
+```
+
+```{r include=FALSE}
+Q2_summary_empirical_mean_temp <- Q2_summary_empirical_mean %>% 
+  group_by(diff) %>%
+  summarize(m = unique(m), nu = unique(nu), alpha = unique(alpha)) %>%
+  arrange(diff)
+```
+
+#### Analysis on variance
+```{r include=FALSE}
+Q2_summary_empirical_var <- Q2_summary %>%
+  mutate(diff = envelop_3_empirical_var - theoretical_var) %>%
+  select(m, nu, lambda, alpha, diff) %>%
+  arrange(diff)
+
+mean(Q2_summary_empirical_var$diff) # the difference to theoretical variance is large
+sum(Q2_summary_empirical_var$diff >=0) # there is no empirical variance that is higher than the theoretical variance.
+```
+
+```{r include=FALSE}
+Q2_summary_empirical_var_temp <- Q2_summary_empirical_var %>% 
+  group_by(diff) %>%
+  summarize(m = unique(m), nu = unique(nu), alpha = unique(alpha)) %>%
+  arrange(diff)
+```
+
+#### Plots
+```{r echo=FALSE}
+# Mean plots
+p_mean_m <- ggplot(Q2_summary_empirical_mean_temp, aes(m, diff)) +
+  geom_point() + 
+  theme_minimal() +
+  labs(y = 'Sample Mean - Theoretical Mean', title = 'Difference in mean vs m') +
+  theme(axis.title.y = element_text(size = 7), title = element_text(size = 8))
+p_mean_nu <- ggplot(Q2_summary_empirical_mean_temp, aes(nu, diff)) + 
+  geom_point() + 
+  theme_minimal() +
+  labs(y = 'Sample Mean - Theoretical Mean', x = expression(nu), title = expression('Difference in mean vs '*nu)) +
+  theme(axis.title.y = element_text(size = 7), title = element_text(size = 8))
+p_mean_alpha <- ggplot(Q2_summary_empirical_mean_temp, aes(alpha, diff)) + 
+  geom_point() + 
+  theme_minimal() +
+  labs(y = 'Sample Mean - Theoretical Mean', x = expression(alpha), title = expression('Difference in mean vs '*alpha)) +
+  theme(axis.title.y = element_text(size = 7), title = element_text(size = 8))
+
+# Variance plots
+p_var_m <- ggplot(Q2_summary_empirical_var_temp, aes(m, diff)) + 
+  geom_point() + 
+  theme_minimal() +
+  labs(y = 'Sample Variance - Theoretical Variance', title = 'Difference in variance vs m') +
+  theme(axis.title.y = element_text(size = 7), title = element_text(size = 8))
+p_var_nu <- ggplot(Q2_summary_empirical_var_temp, aes(nu, diff)) + 
+  geom_point() + 
+  theme_minimal() +
+  labs(y = 'Sample Variance - Theoretical Variance', x = expression(nu), title = expression('Difference in variance vs '*nu)) +
+  theme(axis.title.y = element_text(size = 7), title = element_text(size = 8))
+p_var_alpha <- ggplot(Q2_summary_empirical_var_temp, aes(alpha, diff)) + 
+  geom_point() + 
+  theme_minimal() +
+  labs(y = 'Sample Variance - Theoretical Variance', x = expression(alpha), title = expression('Difference in variance vs '*alpha)) +
+  theme(axis.title.y = element_text(size = 7), title = element_text(size = 8))
+
+grid.arrange(p_mean_m, p_mean_nu, p_mean_alpha, p_var_m, p_var_nu, p_var_alpha, ncol = 3)
+```
+
+From the plots and the other analysis from the dataframe, we draw the following conclusions: \
+**1.** The differences between the sample and theoretical mean/variance is the smallest when \
+- $\m$ is large; \
+- $\nu$ is close to zero; \
+- $\alpha$ is small. \
+**2.** The mean of all differences in mean is small. \
+**3.** The mean of all differences in variance is large, and there is no empirical variance that is higher than the theoretical variance. \
+
+### (c)
+With the help of `matrix`, list and for loops, it is fairly easy to find the sample quantile for each of the 10000 sets of parameters. \
+For CLT quantiles, we make the unrealistic assumption of $\frac{X - E(X)}{\sqrt{Var(X)}} \sim N(0, 1)$, i.e. assuming that $X$ follows a normal distribution. The expectations and variances used here are the theoretical means and variances calculated in part (b). \
+As a result, similar to the previous `Q2_summary`, we are able to store the difference between sample quantiles and CLT quantiles for each set of parameters in `Q2_summary_quantiles_diff`. We focus on 5%, 10%, 25%, 50%, 75%, 90% and 95% percentiles. We plot these information using `ggplot2`. \
+Note that we remove $m = 1.6$ and $m = 2.53$ from the plot, just to make the trend looks clearer. \
+
+#### Empirical quantiles
+```{r include=FALSE}
+quantile_percents <- c(0.05, 0.1, 0.25, 0.5, 0.75, 0.9, 0.95)
+
+matrix <- matrix(numeric(length = length(nu)*length(quantile_percents)), nrow = length(nu))
+
+for (i in 1:length(nu)){
+  matrix[i,] <- quantile(X_envelope_3[[i]], prob = quantile_percents)
+}
+```
+
+```{r include=FALSE}
+Q2_empirical_quantiles <- as.data.frame(matrix) %>% mutate(index = 1:length(nu))
+colnames(Q2_empirical_quantiles) <- c(paste0('Empirical_', quantile_percents*100, '%'), 'index')
+
+Q2_summary_quantiles <- Q2_summary %>% 
+  mutate(index = 1:length(nu)) %>%
+  select(m, nu, lambda, alpha, index, theoretical_mean, theoretical_var) %>%
+  left_join(Q2_empirical_quantiles, by = join_by(index)) %>%
+  select(-index)
+Q2_summary_quantiles
+```
+
+
+#### CLT quantiles
+Try to make the unrealistic assumption of 
+$$
+\frac{X - E(X)}{\sqrt{Var(X)}} \sim N(0, 1)
+$$
+
+and estimate quantiles accordingly:
+$$
+quantile = E(X) + \sqrt{Var(X)}\Phi^{-1}(p)
+$$
+
+```{r include=FALSE}
+matrix <- matrix(numeric(length = length(nu)*length(quantile_percents)), nrow = length(nu))
+
+for (i in 1:length(nu)){
+  matrix[i,] <- Q2_summary$theoretical_mean[i] + sqrt(Q2_summary$theoretical_var[i]) * qnorm(quantile_percents, mean = 0, sd = 1)
+}
+```
+
+```{r include=FALSE}
+Q2_CLT_quantiles <- as.data.frame(matrix) %>% mutate(index = 1:length(nu))
+colnames(Q2_CLT_quantiles) <- c(paste0('CLT_', quantile_percents*100, '%'), 'index')
+
+Q2_summary_quantiles <- Q2_summary_quantiles %>% 
+  mutate(index = 1:length(nu)) %>%
+  left_join(Q2_CLT_quantiles, by = join_by(index)) %>%
+  select(-index)
+Q2_summary_quantiles
+```
+
+#### Compare two types of quantiles:
+```{r include=FALSE}
+Q2_summary_quantiles_diff <- Q2_summary_quantiles %>%
+  mutate(`0.05` = `CLT_5%` - `Empirical_5%`,
+         `0.10` = `CLT_10%` - `Empirical_10%`,
+         `0.25` = `CLT_25%` - `Empirical_25%`,
+         `0.50` = `CLT_50%` - `Empirical_50%`,
+         `0.75` = `CLT_75%` - `Empirical_75%`,
+         `0.90` = `CLT_90%` - `Empirical_90%`,
+         `0.95` = `CLT_95%` - `Empirical_95%`) %>%
+  select(m, nu, lambda, alpha, `0.05`, `0.10`, `0.25`, `0.50`, `0.75`, `0.90`, `0.95`)
+
+Q2_summary_quantiles_diff
+```
+
+```{r echo=FALSE}
+temp <- Q2_summary_quantiles_diff %>%
+  mutate(m = round(m, digits = 3), nu = round(nu, digits = 3)) %>%
+  filter(!m %in% c(1.6, 2.533)) %>% # Remove the two columns to make plots nicer
+  select(m, nu, `0.05`, `0.10`, `0.25`, `0.50`, `0.75`, `0.90`, `0.95`)
+
+temp_long <- pivot_longer(
+ temp,
+ cols = c(`0.05`, `0.10`, `0.25`, `0.50`, `0.75`, `0.90`, `0.95`),
+ names_to = 'x',
+ values_to = "y"
+)
+
+ggplot(temp_long, aes(x = x, y = y, color = factor(m))) +
+  geom_boxplot() +
+  facet_wrap(~nu, labeller = label_both) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  labs(x = "Percents", y = "CLT Percentile - Sample Percentile", color = "m", title = expression('Difference between Sample Percentiles and CLT Percentiles, holding '*nu*' constant')) + 
+  scale_x_discrete(labels = paste0(quantile_percents*100, '%'))
+
+ggplot(temp_long, aes(x = x, y = y, color = factor(nu))) +
+  geom_boxplot() +
+  facet_wrap(~m, labeller = label_both) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  labs(x = "Percents", y = "CLT Percentile - Sample Percentile", color = expression(nu), title = 'Difference between Sample Percentiles and CLT Percentiles, holding m constant') +
+  scale_x_discrete(labels = paste0(quantile_percents*100, '%'))
+```
+
+From these plots one can notice the following: \
+**1. ** CLT percentiles are lower than the sample percentiles when the percentage is low. CLT percentiles are higher than the sample percentiles when the percentage is high. Therefore, we can conclude that compared to a normal distribution, our sample distribution has heavier tails on both sides. \
+**2. ** The higher the $m$, the lower the discrepancies between the CLT percentiles and the sample percentiles. Hence, as $m$ gets higher, the sample distribution converges to a normal distribution. \
+**3. ** The closer $\nu$ is to zero, the lower discrepancies between the CLT percentiles and the sample percentiles. Hence, as $\nu$ gets closer to zero, the sample distribution converges to a normal distribution. \
+
+
+### d)
+We set $m = 100$ (a large value!) and $sigma = 2$ to test the arguments. We generate $X \sim f(x)$ with our best envelope function, perform sampling from a $N(\lambda, \sigma^2)$, and make comparison between the sample distribution and the normal distribution. With use PDF flot and Q-Q plot to draw conclusions. \
+```{r include=FALSE}
+# Set m to be a large value. Also set arbitrary parameters sigma and lambda.
+m <- 100
+sigma <- 2
+lambda <- 1
+
+# Set the other parameters according to requirements
+nu <- 0
+alpha <- sigma*sqrt(2*m - 3)
+alpha
+```
+
+### Generate sample from envelope 3 (cosine)
+```{r include=FALSE}
+# Generate Y
+n <- 10^5
+U <- runif(n)
+
+Y <- asin(2*U-1)
+```
+
+```{r include=FALSE}
+# Generate the sample using AR
+set.seed(1)
+U <- runif(n)
+
+temp <- atan(-nu/(2*m-1))
+
+Q2d_sample <- Y[U < (cos(Y)^{2*m-1}*exp(-nu*Y))/(cos(temp)^{2*m-1}*exp(-nu*temp))]
+```
+
+```{r include=FALSE}
+# Produce X, and check mean, variance, acceptance
+Q2d_X <- tan(Q2d_sample) * alpha + lambda
+
+envelop_3_empirical_mean <- mean(Q2d_X)
+envelop_3_empirical_var <- var(Q2d_X)
+envelope_3_empirical_acceptance <- length(Q2d_X)/n
+envelope_3_empirical_acceptance
+```
+
+### Use graphs to compare the sample with N(lambda, sigma)
+```{r echo=FALSE}
+# PDF
+x <- seq(min(Q2d_X), max(Q2d_X), 0.01)
+plot(x, dnorm(x, mean = lambda, sd = sigma), type = 'l', main = expression('Compare the PDF of the generated X and N('*lambda*', '*sigma^2*')'), ylab = 'density', col = 'red')
+lines(density(Q2d_X), col = 'black')
+legend('topright', legend = c('generated X', expression('N('*lambda*', '*sigma^2*')')), col = c('black', 'red'), lty = 1)
+```
+
+```{r echo=FALSE}
+# Q-Q plot
+qqplot(rnorm(length(Q2d_X), mean = lambda, sd = sigma), Q2d_X, main = expression('Q-Q plot of the generated X vs N('*lambda*', '*sigma^2*')'), xlab = expression('N('*lambda*', '*sigma^2*')'), ylab = 'Generated X')
+abline(a = 0, b = 1, col = 'red', lwd = 2)
+legend('bottomright', legend = '45 degree reference line', col = 'red', lty = 1, lwd = 2)
+```
+
+Both the PDF plot and the Q-Q plot supports the argument that, under the suggested conditions, there is indeed vast similarity between the generated X and $N(\lambda, \sigma^2)$. However, one should notice that when $m$ is large, the rate of acceptance tends to be very low (in this case 8.99%), which implies a big waste of computational power. Consequently, there may not be sufficient data to strongly support the argument.\
 
 
 ## Question 3
