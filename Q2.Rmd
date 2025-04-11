@@ -211,17 +211,18 @@ set.seed(1)
 n <- 10^5
 U <- runif(n)
 
-Y <- asin(2*U-1)
-sd(Y)/sqrt(n)
+Y_original <- asin(2*U-1)
+SE_original <- sd(Y_original)/sqrt(n)
 ```
 
 ```{r include=FALSE}
 # Control variate method
 set.seed(1)
 Y_prime <- 1/2 - U
-c <- -12*cov(Y, Y_prime)
-sample <- Y + c*Y_prime
-sd(sample)/sqrt(n)
+c <- -12*cov(Y_original, Y_prime) # 1/12 is the population variance of 1 - U
+Y <- Y_original + c*Y_prime
+SE_cv <- sd(Y)/sqrt(n)
+(SE_original - SE_cv)/SE_original
 ```
 
 ```{r include=FALSE}
@@ -419,6 +420,8 @@ f(y) \propto (\cos(y))^{2m}e^{-\nu y} \\
 g(y) = \frac{1}{2}\cos(y)
 $$
 
+Control variate method is used at this stage to reduce the variance of the sample $Y_{original}$ generated from $g(y)$. With $Y' = \frac{1}{2} - U$ being the zero-mean random variable, $Y = Y_{original} = cY'$ (where$c = - \frac{Cov(Y_{original}, Y')}{Var(Y')}$). This method reduced the variance by 89.88%.
+
 Accept the sample from the envelope function when \
 $$
 U < \frac{(cos(y))^{2m - 1} e^{-\nu y}}{\left[cos\left( arctan(-\frac{\nu}{2m-1})\right)\right] e^{-\nu \ arctan(-\frac{\nu}{2m-1})}}
@@ -458,7 +461,7 @@ ggplot(Q2_summary_acceptance_temp, aes(x = nu, y = envelope_3, col = factor(m)))
 
 From the plot, we can see that the acceptance rate is highest when $m$ is small, **AND** $\nu$ is close to zero.
 
-### b)
+### (b)
 We have already calculated the theoretical mean and variances when we defined `Q2_summary` early on. Now, we compare them with the sample mean and variances using the `dplyr` package, and the differences between them are plotted. 
 From the dataframe, we noticed that $\lambda$ has no effect on either the deviation from theoretical mean or the deviation from theoretical variances. Use plots to investigate the effects of other parameters:
 
@@ -543,12 +546,16 @@ From the plots and the other analysis from the dataframe, we draw the following 
 - $\nu$ is close to zero; \
 - $\alpha$ is small. \
 **2.** The mean of all differences in mean is small. \
-**3.** The mean of all differences in variance is large, and there is no empirical variance that is higher than the theoretical variance. \\
+**3.** The mean of all differences in variance is large, and there is no empirical variance that is higher than the theoretical variance. \
 
-### c)
+### (c)
+With the help of `matrix`, list and for loops, it is fairly easy to find the sample quantile for each of the 10000 sets of parameters. \
+For CLT quantiles, we make the unrealistic assumption of $\frac{X - E(X)}{\sqrt{Var(X)}} \sim N(0, 1)$, i.e. assuming that $X$ follows a normal distribution. The expectations and variances used here are the theoretical means and variances calculated in part (b). \
+As a result, similar to the previous `Q2_summary`, we are able to store the difference between sample quantiles and CLT quantiles for each set of parameters in `Q2_summary_quantiles_diff`. We focus on 5%, 10%, 25%, 50%, 75%, 90% and 95% percentiles. We plot these information using `ggplot2`. \
+Note that we remove $m = 1.6$ and $m = 2.53$ from the plot, just to make the trend looks clearer. \
+
 #### Empirical quantiles
-```{r}
-length(X_envelope_3)
+```{r include=FALSE}
 quantile_percents <- c(0.05, 0.1, 0.25, 0.5, 0.75, 0.9, 0.95)
 
 matrix <- matrix(numeric(length = length(nu)*length(quantile_percents)), nrow = length(nu))
@@ -556,32 +563,103 @@ matrix <- matrix(numeric(length = length(nu)*length(quantile_percents)), nrow = 
 for (i in 1:length(nu)){
   matrix[i,] <- quantile(X_envelope_3[[i]], prob = quantile_percents)
 }
-
-dim(matrix)
 ```
 
-```{r}
+```{r include=FALSE}
 Q2_empirical_quantiles <- as.data.frame(matrix) %>% mutate(index = 1:length(nu))
-colnames(Q2_empirical_quantiles) <- c(paste(as.character(quantile_percents*100), '%', sep = ''), 'index')
+colnames(Q2_empirical_quantiles) <- c(paste0('Empirical_', quantile_percents*100, '%'), 'index')
 
-Q2_summary_empirical_quantiles <- Q2_summary %>% 
+Q2_summary_quantiles <- Q2_summary %>% 
   mutate(index = 1:length(nu)) %>%
   select(m, nu, lambda, alpha, index, theoretical_mean, theoretical_var) %>%
   left_join(Q2_empirical_quantiles, by = join_by(index)) %>%
   select(-index)
-
-Q2_summary_empirical_quantiles
+Q2_summary_quantiles
 ```
 
 
-### CLT quantiles
-```{r}
+#### CLT quantiles
+Try to make the unrealistic assumption of 
+$$
+\frac{X - E(X)}{\sqrt{Var(X)}} \sim N(0, 1)
+$$
 
+and estimate quantiles accordingly:
+$$
+quantile = E(X) + \sqrt{Var(X)}\Phi^{-1}(p)
+$$
+
+```{r include=FALSE}
+matrix <- matrix(numeric(length = length(nu)*length(quantile_percents)), nrow = length(nu))
+
+for (i in 1:length(nu)){
+  matrix[i,] <- Q2_summary$theoretical_mean[i] + sqrt(Q2_summary$theoretical_var[i]) * qnorm(quantile_percents, mean = 0, sd = 1)
+}
 ```
 
-## d)
-### Redefine the parameters
-```{r}
+```{r include=FALSE}
+Q2_CLT_quantiles <- as.data.frame(matrix) %>% mutate(index = 1:length(nu))
+colnames(Q2_CLT_quantiles) <- c(paste0('CLT_', quantile_percents*100, '%'), 'index')
+
+Q2_summary_quantiles <- Q2_summary_quantiles %>% 
+  mutate(index = 1:length(nu)) %>%
+  left_join(Q2_CLT_quantiles, by = join_by(index)) %>%
+  select(-index)
+Q2_summary_quantiles
+```
+
+#### Compare two types of quantiles:
+```{r include=FALSE}
+Q2_summary_quantiles_diff <- Q2_summary_quantiles %>%
+  mutate(`0.05` = `CLT_5%` - `Empirical_5%`,
+         `0.10` = `CLT_10%` - `Empirical_10%`,
+         `0.25` = `CLT_25%` - `Empirical_25%`,
+         `0.50` = `CLT_50%` - `Empirical_50%`,
+         `0.75` = `CLT_75%` - `Empirical_75%`,
+         `0.90` = `CLT_90%` - `Empirical_90%`,
+         `0.95` = `CLT_95%` - `Empirical_95%`) %>%
+  select(m, nu, lambda, alpha, `0.05`, `0.10`, `0.25`, `0.50`, `0.75`, `0.90`, `0.95`)
+
+Q2_summary_quantiles_diff
+```
+
+```{r echo=FALSE}
+temp <- Q2_summary_quantiles_diff %>%
+  mutate(m = round(m, digits = 3), nu = round(nu, digits = 3)) %>%
+  filter(!m %in% c(1.6, 2.533)) %>% # Remove the two columns to make plots nicer
+  select(m, nu, `0.05`, `0.10`, `0.25`, `0.50`, `0.75`, `0.90`, `0.95`)
+
+temp_long <- pivot_longer(
+ temp,
+ cols = c(`0.05`, `0.10`, `0.25`, `0.50`, `0.75`, `0.90`, `0.95`),
+ names_to = 'x',
+ values_to = "y"
+)
+
+ggplot(temp_long, aes(x = x, y = y, color = factor(m))) +
+  geom_boxplot() +
+  facet_wrap(~nu, labeller = label_both) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  labs(x = "Percents", y = "CLT Percentile - Sample Percentile", color = "m", title = expression('Difference between Sample Percentiles and CLT Percentiles, holding '*nu*' constant')) + 
+  scale_x_discrete(labels = paste0(quantile_percents*100, '%'))
+
+ggplot(temp_long, aes(x = x, y = y, color = factor(nu))) +
+  geom_boxplot() +
+  facet_wrap(~m, labeller = label_both) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  labs(x = "Percents", y = "CLT Percentile - Sample Percentile", color = expression(nu), title = 'Difference between Sample Percentiles and CLT Percentiles, holding m constant') +
+  scale_x_discrete(labels = paste0(quantile_percents*100, '%'))
+```
+
+From these plots one can notice the following: \
+**1. ** CLT percentiles are lower than the sample percentiles when the percentage is low. CLT percentiles are higher than the sample percentiles when the percentage is high. Therefore, we can conclude that compared to a normal distribution, our sample distribution has heavier tails on both sides. \
+**2. ** The higher the $m$, the lower the discrepancies between the CLT percentiles and the sample percentiles. Hence, as $m$ gets higher, the sample distribution converges to a normal distribution. \
+**3. ** The closer $\nu$ is to zero, the lower discrepancies between the CLT percentiles and the sample percentiles. Hence, as $\nu$ gets closer to zero, the sample distribution converges to a normal distribution. \
+
+
+### d)
+We set $m = 100$ (a large value!) and $sigma = 2$ to test the arguments. We generate $X \sim f(x)$ with our best envelope function, perform sampling from a $N(\lambda, \sigma^2)$, and make comparison between the sample distribution and the normal distribution. With use PDF flot and Q-Q plot to draw conclusions. \
+```{r include=FALSE}
 # Set m to be a large value. Also set arbitrary parameters sigma and lambda.
 m <- 100
 sigma <- 2
@@ -594,7 +672,7 @@ alpha
 ```
 
 ### Generate sample from envelope 3 (cosine)
-```{r}
+```{r include=FALSE}
 # Generate Y
 n <- 10^5
 U <- runif(n)
@@ -602,8 +680,9 @@ U <- runif(n)
 Y <- asin(2*U-1)
 ```
 
-```{r}
+```{r include=FALSE}
 # Generate the sample using AR
+set.seed(1)
 U <- runif(n)
 
 temp <- atan(-nu/(2*m-1))
@@ -611,7 +690,7 @@ temp <- atan(-nu/(2*m-1))
 Q2d_sample <- Y[U < (cos(Y)^{2*m-1}*exp(-nu*Y))/(cos(temp)^{2*m-1}*exp(-nu*temp))]
 ```
 
-```{r}
+```{r include=FALSE}
 # Produce X, and check mean, variance, acceptance
 Q2d_X <- tan(Q2d_sample) * alpha + lambda
 
@@ -622,17 +701,20 @@ envelope_3_empirical_acceptance
 ```
 
 ### Use graphs to compare the sample with N(lambda, sigma)
-```{r}
+```{r echo=FALSE}
 # PDF
 x <- seq(min(Q2d_X), max(Q2d_X), 0.01)
-plot(x, dnorm(x, mean = lambda, sd = sigma), type = 'l', main = 'Compare the PDF of the generated X and N(lambda, sigma^2)', ylab = 'density', col = 'red')
+plot(x, dnorm(x, mean = lambda, sd = sigma), type = 'l', main = expression('Compare the PDF of the generated X and N('*lambda*', '*sigma^2*')'), ylab = 'density', col = 'red')
 lines(density(Q2d_X), col = 'black')
-legend('topright', legend = c('generated X', 'N(lambda, sigma^2)'), col = c('black', 'red'), lty = 1)
+legend('topright', legend = c('generated X', expression('N('*lambda*', '*sigma^2*')')), col = c('black', 'red'), lty = 1)
 ```
 
-```{r}
+```{r echo=FALSE}
 # Q-Q plot
-qqplot(rnorm(length(Q2d_X), mean = lambda, sd = sigma), Q2d_X, main = 'Q-Q plot of the generated X vs N(lambda, sigma^2)')
+qqplot(rnorm(length(Q2d_X), mean = lambda, sd = sigma), Q2d_X, main = expression('Q-Q plot of the generated X vs N('*lambda*', '*sigma^2*')'), xlab = expression('N('*lambda*', '*sigma^2*')'), ylab = 'Generated X')
 abline(a = 0, b = 1, col = 'red', lwd = 2)
 legend('bottomright', legend = '45 degree reference line', col = 'red', lty = 1, lwd = 2)
 ```
+
+Both the PDF plot and the Q-Q plot supports the argument that, under the suggested conditions, there is indeed vast similarity between the generated X and $N(\lambda, \sigma^2)$. However, one should notice that when $m$ is large, the rate of acceptance tends to be very low (in this case 8.84%), which implies a big waste of computational power. Consequently, there may not be sufficient data to strongly support the argument.\
+
